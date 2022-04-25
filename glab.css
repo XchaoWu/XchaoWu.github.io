@@ -266,5 +266,14 @@ TD.coursename {
 	width: 100%;
   }
   .ttt1{
-	  background-color: #e2e2e2;
+	  /* background-color: #e2e2e2; */
+  }
+
+  .footer {
+	width:100%;
+	margin-left:auto;
+	margin-right:auto;
+	padding-top:4px;
+	padding-bottom:4px;
+	background-color:#ececec;
   }
