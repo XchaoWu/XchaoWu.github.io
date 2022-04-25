@@ -47,32 +47,76 @@ BODY {
 }
 </style>
 
+
 <body onload='changevideo("videos/salon.mp4",3)'>
 
-<div id="primarycontent">
-<center><h1>Scalable Neural Indoor Scene Rendering</h1></center>
+  <!-- <center> -->
+      <!-- <img src="images/university.png" width=50%> -->
+    <!-- <div class="button_icons">
+    
+      <div class="button_my">
+        <img alt="" src="images/zju2.png" width=80%>
+    </div>
+    
+    <div class="button_my">
+        <img alt="" src="images/texas2.png" width=70%>
+    </div>
+    
+    <div class="button_my">
+        <img alt="" src="images/brown3.png" width=45%>
+    </div>
+    </div> -->
+    <!-- </center> -->
+<!-- <br><br><br> -->
 
+<div id="primarycontent">
+<center>
+  <h1>Scalable Neural Indoor Scene Rendering
+  </h1></center>
+<center><h3>SIGGRAPH 2022 (Journal track) </h3></center>
 <br>
+<center><h3>
+  <a href="">Xiuchao Wu</a><sup>1*</sup>&nbsp;&nbsp;
+  <a href="https://superxjm.github.io/">Jiamin Xu</a><sup>1*</sup>&nbsp;&nbsp;
+  <a href="https://zzh2000.github.io/">Zihan Zhu</a><sup>1</sup>&nbsp;&nbsp;
+  <a href="http://www.cad.zju.edu.cn/home/bao/">Hujun Bao</a><sup>1</sup>&nbsp;&nbsp;
+  <a href="https://www.cs.utexas.edu/~huangqx/">Qixing Huang</a><sup>2</sup>&nbsp;&nbsp;
+  <a href="https://jamestompkin.com/">James Tompkin</a><sup>3</sup>&nbsp;&nbsp;
+  <a href="http://www.cad.zju.edu.cn/home/weiweixu/weiweixu_en.htm">WeiWei Xu</a><sup>1</sup></h3>
+</center>
+<!-- <center>
+  <img src="images/university.png" width=50%>
+</center> -->
+<br>
+<img class="uni" src="images/university.png" >
+
+<br><br><br>
+<center><h3><sup>1</sup>Zhejiang University&nbsp;&nbsp;
+  <sup>2</sup>University of Texasb at Austin&nbsp;&nbsp;
+  <sup>3</sup>Brown University&nbsp;&nbsp;</center>
+<center><h3><sup>*</sup>joint first authors</h3></center>
+<br>
+
 
 <center>
 <div class="button_icons">
 
   <div class="button_my">
-  <a href="xxx">
+  <a href="">
     <img alt="" src="images/paper_icon.png" width=25%>
     <div class="my_txt"><span>Paper</span></div>
   </a>
 </div>
 
 <div class="button_my">
-  <a href="xxx">
+  <a href="https://www.youtube.com/embed/hn-IVZZ-_lM">
     <img alt="" src="images/video_icon.png" width=25%>
     <div class="my_txt"><span>Video</span></div>
   </a>
 </div>
 
 <div class="button_my">
-  <a href="xxx">
+  <a href="https://github.com/XchaoWu/Scalable-Neural-Indoor-Scene-Rendering">
     <img alt="" src="images/code_icon.png" width=25%>
     <div class="my_txt"><span>Code</span></div>
   </a>
@@ -128,44 +172,88 @@ BODY {
 </div>
 
 
-<h2>Abstract</h2>
+<center><h2>Full Video</h2></center>
+<center>
+<table align="center" border="0" cellspacing="0" cellpadding="0">
+  <iframe width="960" height="540" src="https://www.youtube.com/embed/hn-IVZZ-_lM" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>
+  </iframe>
+</table>
+</center>
+
+<br><br><br>
+<hr>
+<!-- <img class="teaser" src="images/pipeline.png">  -->
+<center><h2>Abstract</h2></center>
 <div style="font-size:14px; text-align:justify;"><p>We propose a scalable neural scene reconstruction and rendering method to
   support distributed training and interactive rendering of large indoor scenes.
   Our representation is based on tiles and a separation of view-independent
   appearance (diffuse color and shading) and view-dependent appearance
   (specular highlights, reflections), each of which predicted by lower-capacity
-  MLPs. Such a two-MLP based representation allows us to leverage the phenomena that view-dependent surface effects can be attributed to a reflected
-  virtual light at the total ray distance to the source. This lets us handle sparse
-  samplings of the input scene where reflection highlights do not always appear consistently in input images. Further, our scheme allows tile MLPs to be
+  MLPs. After assigning MPLs per tile, our scheme allows tile MLPs to be
   trained in parallel and still represent complex reflections through a two-pass
-  training strategy. This is enabled by a background sampling strategy that
-  can augment tile information from a proxy global mesh geometry and tolerate typical errors from reconstructed proxy geometry. We show interactive
-  free-viewpoint rendering results from five scenes. One of them covers areas
-  of more than 100 &#13217. Experimental results show that our method produces
-  higher-quality renderings than a single large-capacity MLP and other recent
-  baseline methods.</p></div>
+  training strategy. This is enabled by a background sampling strategy that can
+  augment tile information from a proxy global mesh geometry and tolerate
+  typical errors from reconstructed proxy geometry. Further, we design a
+  two-MLP based representation at each tile to leverage the phenomena that
+  view-dependent surface effects can be attributed to a reflected virtual light at
+  the total ray distance to the source. This lets us handle sparse samplings of
+  the input scene where reflection highlights do not always appear consistently
+  in input images. We show interactive free-viewpoint rendering results from
+  five scenes. One of them covers areas of more than 100 &#13217. Experimental
+  results show that our method produces higher-quality renderings than a
+  single large-capacity MLP and other recent baseline methods.</p></div>
 
-<br><br>
 
 
 <img class="teaser" src="images/teaser.png"> 
 
+<br>
+<br><br><br><br><br><br><br><br><br><br><br><br><br><br>
+<br><br><br>
+<center><h2>Method</h2></center>
+<div style="font-size:14px; text-align:justify;"><p>We create tiles over the volumetric scene and optimize per-tile MLPs. Each tile has two MLPs: 1) The surface MLP that encodes density and view independent color, which is later stored in an octree for fast rendering. 2) The reflection MLP that encodes view-dependent effects 
+  like highlights using virtual points underneath the surface at the ray distance of 
+  the reflected light. Color outputs from both paths are combined in the final rendering.</p></div>
+  <img class="teaser" src="images/pipeline.png"> 
 
 <br>
 <br>
-<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
+<br><br><br><br><br><br><br><br><br><br><br><br><br><br>
 
+<hr>
 
-<center><h2>Interactive Rendering & Distributed Training</h2></center>
+<center><h2>Distributed Training</h2></center>
+<center><p>Our scheme allows tile MLPs to be trained in parallel.</p></center>
+
+<center>
+  <video src="videos/distributed_loop.mp4" height="345" autoplay loop muted></video>
+  <video src="videos/training_table4.mp4" height="345" autoplay loop muted></video>
+</center>
+
+<br>
+<center><h2>Interactive Rendering</h2></center>
 <center><p>The rendering time for a frame of resolution <math> <mn> 1280 </mn> <mo> &#x00D7; <!-- multiplication sign --> </mo> <mn> 720 </mn> </math> is 50ms on average.</p></center>
 <center>
+  <video src="videos/online_others.mp4" width="960"  autoplay loop muted></video>
+  </center>
+<center>
+  <video src="videos/online.mp4" width="960" autoplay loop muted></video>
+</center>
+<!-- <center>
   <video src="videos/online.mp4" width="560" height="318" autoplay loop muted></video>
   <video src="videos/distributed_loop.mp4" width="560" height="318" autoplay loop muted></video>
+  <video src="videos/online_others.mp4" width="1080" height="540" autoplay loop muted></video>
+</center> -->
+
+<br>
+<center><h2>Extrapolation</h2></center>
+<center><p>We test the case when novel viewpoints are far from captured views.</p></center>
+
+<center>
+  <video src="videos/FarRender.mp4" width="960" autoplay loop muted></video>
 </center>
 <br>
 <br>
-<br>
-
 <!-- autoplay="autoplay" -->
 <!-- <center><h2>Distributed Training</h2></center>
 <center><p></p></center>
@@ -190,13 +278,18 @@ BODY {
 </p>-->
 <br>
 <br>
-<br>
-
-<center><h2>Full Video</h2></center>
-
+<hr>
+<center><h2>Acknowledgements</h2></center>
+<div class='ttt1'>
 <center>
-  <video src="videos/demo_12.mp4" width="960" height="540" controls></video>
+  <p>Supported by Information Technology Center and State Key Lab of CAD&CG, Zhejiang University.</p>
 </center>
+
+</div>
+
+<!-- <center>
+  <video src="videos/demo_12.mp4" width="960" height="540" controls></video>
+</center> -->
 <!-- <br>
 <br>
 <br>
@@ -213,20 +306,6 @@ BODY {
 
 
 
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
 <br>
 
 <!-- 
@@ -314,15 +393,6 @@ BODY {
     </tr>
 </table> -->
 <p>&nbsp;</p>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<hr/>
 
 <!-- 
 <h2>Citation</h2>
@@ -361,16 +431,8 @@ CapReal (335545), a Google Faculty award, a UCL visiting student program, and gi
 <br> -->
 <!--<h2>Citation</h2>
 <p></p>-->
-
+<!-- 
 <div style="display:none">
-<!-- GoStats JavaScript Based Code -->
-<script type="text/javascript" src="http://gostats.com/js/counter.js"></script>
-<script type="text/javascript">_gos='c3.gostats.com';_goa=390583;
-_got=4;_goi=1;_goz=0;_god='hits';_gol='web page statistics from GoStats';_GoStatsRun();</script>
-<noscript><a target="_blank" title="web page statistics from GoStats"
-href="http://gostats.com"><img alt="web page statistics from GoStats"
-src="http://c3.gostats.com/bin/count/a_390583/t_4/i_1/z_0/show_hits/counter.png"
-style="border-width:0" /></a></noscript>
-</div>
-<!-- End GoStats JavaScript Based Code -->
+
+
 </body></html>
