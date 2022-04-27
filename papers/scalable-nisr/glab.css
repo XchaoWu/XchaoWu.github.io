@@ -72,7 +72,7 @@ BLOCKQUOTE P {
 	FONT-WEIGHT: normal; FONT-SIZE: smaller; MARGIN: 0px
 }
 #primarycontent {
-	LINE-HEIGHT: 1.5; PADDING-TOP: 25px
+	LINE-HEIGHT: 1.5; PADDING-TOP: 25px;
 }
 #footer {
 	CLEAR: both; FONT-SIZE: x-small; PADDING-BOTTOM: 10px; PADDING-TOP: 20px
@@ -234,10 +234,21 @@ TD.coursename {
 	width:50%;
   }
 
+  .button_icons{
+	padding-left: 200px;
+	padding-right: 200px;
+}
+
   .button_my{
 	float: left;
 	width: 28%;
 	text-align: center;
+	cursor: pointer;
+	transition: all 2.0s;
+  }
+
+   a:hover img{
+	  transform:scale(1.1,1.1);
   }
 
   .my_logo{
@@ -264,10 +275,7 @@ TD.coursename {
 	font-weight: bold;
 	/* background-color: #f2f2f2; */
   }
-  .button_icons{
-	  padding-left: 200px;
-	  padding-right: 200px;
-  }
+
   .teaser {
 	display: block;
 	margin-left: auto;
