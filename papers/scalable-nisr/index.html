@@ -130,9 +130,34 @@ BODY {
 </center>
 
 
-<br><br><br><br><br>
+<br><br><br><br><br><br>
 
 
+<img class="teaser" src="images/teaser.png"> 
+<br><br><br><br><br><br><br><br><br><br>
+<br><br><br><br><br><br><br>
+<center><h2>Abstract</h2></center>
+<div style="font-size:14px; text-align:justify;"><p>We propose a scalable neural scene reconstruction and rendering method to
+  support distributed training and interactive rendering of large indoor scenes.
+  Our representation is based on tiles and a separation of view-independent
+  appearance (diffuse color and shading) and view-dependent appearance
+  (specular highlights, reflections), each of which predicted by lower-capacity
+  MLPs. After assigning MPLs per tile, our scheme allows tile MLPs to be
+  trained in parallel and still represent complex reflections through a two-pass
+  training strategy. This is enabled by a background sampling strategy that can
+  augment tile information from a proxy global mesh geometry and tolerate
+  typical errors from reconstructed proxy geometry. Further, we design a
+  two-MLP based representation at each tile to leverage the phenomena that
+  view-dependent surface effects can be attributed to a reflected virtual light at
+  the total ray distance to the source. This lets us handle sparse samplings of
+  the input scene where reflection highlights do not always appear consistently
+  in input images. We show interactive free-viewpoint rendering results from
+  five scenes. One of them covers areas of more than 100 &#13217. Experimental
+  results show that our method produces higher-quality renderings than a
+  single large-capacity MLP and other recent baseline methods.</p></div>
+
+
+<center><h2>Rendering Results</h2></center>
 <div class="container">
 
   <center>
@@ -177,44 +202,26 @@ BODY {
 </div>
 
 
-<center><h2>Full Video</h2></center>
+<!-- <center><h2>Full Video</h2></center>
 <center>
 <table align="center" border="0" cellspacing="0" cellpadding="0">
   <iframe width="960" height="540" src="https://www.youtube.com/embed/hn-IVZZ-_lM" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>
   </iframe>
 </table>
-</center>
+</center> -->
 
-<br><br><br>
-<hr>
+<!-- <br><br><br>
+<hr> -->
 <!-- <img class="teaser" src="images/pipeline.png">  -->
-<center><h2>Abstract</h2></center>
-<div style="font-size:14px; text-align:justify;"><p>We propose a scalable neural scene reconstruction and rendering method to
-  support distributed training and interactive rendering of large indoor scenes.
-  Our representation is based on tiles and a separation of view-independent
-  appearance (diffuse color and shading) and view-dependent appearance
-  (specular highlights, reflections), each of which predicted by lower-capacity
-  MLPs. After assigning MPLs per tile, our scheme allows tile MLPs to be
-  trained in parallel and still represent complex reflections through a two-pass
-  training strategy. This is enabled by a background sampling strategy that can
-  augment tile information from a proxy global mesh geometry and tolerate
-  typical errors from reconstructed proxy geometry. Further, we design a
-  two-MLP based representation at each tile to leverage the phenomena that
-  view-dependent surface effects can be attributed to a reflected virtual light at
-  the total ray distance to the source. This lets us handle sparse samplings of
-  the input scene where reflection highlights do not always appear consistently
-  in input images. We show interactive free-viewpoint rendering results from
-  five scenes. One of them covers areas of more than 100 &#13217. Experimental
-  results show that our method produces higher-quality renderings than a
-  single large-capacity MLP and other recent baseline methods.</p></div>
 
 
 
-<img class="teaser" src="images/teaser.png"> 
 
-<br>
+
+
+<!-- <br>
 <br><br><br><br><br><br><br><br><br><br><br><br><br><br>
-<br><br><br>
+<br><br><br> -->
 <center><h2>Method</h2></center>
 <div style="font-size:14px; text-align:justify;"><p>We create tiles over the volumetric scene and optimize per-tile MLPs. Each tile has two MLPs: 1) The surface MLP that encodes density and view independent color, which is later stored in an octree for fast rendering. 2) The reflection MLP that encodes view-dependent effects 
   like highlights using virtual points underneath the surface at the ray distance of 
