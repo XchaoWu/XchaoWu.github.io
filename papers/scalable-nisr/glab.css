@@ -11,10 +11,10 @@ IMG {
 }
 
 H1 {
-	font-size:40px; FONT-WEIGHT: bolder;font-family: "Times New Roman", Times, serif; color: #414141;
+	font-size:38px; FONT-WEIGHT: bolder; font-family: "Arial", Times, serif; color: #3d3d3d;
 }
 H2 {
-	MARGIN-TOP: 20px; FONT-WEIGHT: normal;font-size: 30px; MARGIN-BOTTOM: 20px;font-family: "Sans-serif", Times, serif;
+	MARGIN-TOP: 20px; FONT-WEIGHT: normal;font-size: 24px; MARGIN-BOTTOM: 20px;font-family: "Sans-serif", Times, serif;
 	color: rgb(66, 66, 66);
 }
 H3 {
@@ -22,11 +22,15 @@ H3 {
 }
 
 H4 {
-	MARGIN-TOP: 0px;  font-weight:lighter;FONT-SIZE:normal; MARGIN-BOTTOM: 0px;font-family: "Sans-serif", Times, serif;
+	MARGIN-TOP: 0px;  font-weight:lighter;FONT-SIZE:normal; MARGIN-BOTTOM: 0px;font-family: "Arial", Times, serif;
+}
+
+H5 {
+	MARGIN-TOP: 0px;  font-weight:lighter;FONT-SIZE:20px; MARGIN-BOTTOM: 0px;font-family: "Arial", Times, serif;
 }
 
 P {
-	MARGIN-TOP: 0px; font-size: 16px;font-family: "Times New Roman", Times, serif; color: #666666;
+	MARGIN-TOP: 0px; font-size: 16px;font-family: "Times New Roman", Times, serif; color: #383838;
 }
 A {
 	FONT-WEIGHT: bolder; TEXT-DECORATION: none;font-family: "Times New Roman", Times, serif;
