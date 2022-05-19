@@ -41,6 +41,11 @@ PAPERTITLE {
 	text-align: justify; MARGIN-TOP: 0px; font-size: 15px;font-family: "Times New Roman", Times, serif; color: #383838;
 }
 
+NAME{
+	font-weight: bolder;
+	text-align: justify; MARGIN-TOP: 0px; font-size: 18px;font-family: "Arial", Times, serif; color: #383838;
+}
+
 A:link {
 	COLOR: #5c6b99
 }
