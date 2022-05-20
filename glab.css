@@ -314,15 +314,32 @@ TD.coursename {
 	  /* background-color: #e2e2e2; */
   }
 
-  .footer {
+  /* .footer {
 	width:100%;
 	margin-left:auto;
 	margin-right:auto;
 	padding-top:4px;
 	padding-bottom:4px;
 	/* background-color:#ececec; */
-  }
+  } */
 
   pre{
 	  background-color: #ececec;
   }
+
+.wrapper{
+    min-height: 100%;
+}
+
+
+.footer {
+    display: flex;
+	position: absolute;
+	bottom: 0;
+    justify-content: center;
+    margin-bottom: -50px;
+	width: 100%;
+	height: 50px;
+    background-color: #ffffff;
+    color: rgb(0, 0, 0);
+}
