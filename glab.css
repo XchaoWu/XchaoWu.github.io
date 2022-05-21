@@ -293,6 +293,17 @@ TD.coursename {
 	  width:30%
   }
 
+
+  .video:hover{
+	  transform: scale(1.02);
+	  transition: 0.2s;
+  }
+
+  .video2:hover{
+	transform: scale(1.02);
+	transition: 0.2s;
+}
+
   .my_txt {
 	position: relative;
 	top: 50%;

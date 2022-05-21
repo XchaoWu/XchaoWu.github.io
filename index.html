@@ -15,22 +15,23 @@
 
           <table style="width:100%;border:0px;border-spacing:0px;border-collapse:separate;margin-right:auto;margin-left:auto;"><tbody>
             <tr style="padding:0px">
-              <td style="padding:0%;width:63%;vertical-align:middle">
+
+              <td style="padding:0%;width:85%;vertical-align:middle">
                 <p style="text-align:center">
             <name><strong>Xiuchao Wu (吴秀超)</strong></name>
           </p><p>I am a PhD student of the State Key Lab of CAD&CG, Zhejiang University, supervised by Prof. 
               <a href="http://www.cad.zju.edu.cn/home/weiweixu/weiweixu_en.htm">Weiwei Xu</a>. I did my undergrad at Zhejiang University of Technology.
-              My research interests are neural rendering, view synthesis and image-based rendering. 
-              <br><br><br>
-              E-mail: <a href="wuxiuchao@zju.edu.cn">wuxiuchao@zju.edu.cn</a></p>
+              <br>My research interests are neural rendering, view synthesis and image-based rendering. 
+              <br><br>
+              E-mail: wuxiuchao@zju.edu.cn</p>
               </td>
 
               <td style="padding:2.5%;width:20%;max-width:40%">
-          <img src="" width="150px">
+                <img src="" width="100px">
               </td>
 
             </tr>
-          </tbody></table>
+        </tbody></table>
 
         
           <hr>
@@ -45,9 +46,25 @@
           <table style="width:100%;"><tbody>
       
             <tr>
-              <td style="vertical-align:middle;">
-                <a href="papers/scalable-nisr/snisr.pdf"><img src="images/snisr.jpg" width=350></a></td>
-                
+              <!-- <td style="vertical-align:middle;">
+                <a href="papers/scalable-nisr/snisr.pdf"><img src="images/snisr.jpg" width=350></a></td> -->
+
+            <!-- <td style="vertical-align:middle;">
+                <video width="350px" poster="images/snisr.jpg" muted="muted" onMouseOver="this.play()" onMouseOut="this.pause()" class="video_class"  loop>
+                    <source src="videos/t_video.mp4"  type="video/mp4"></source>
+                </video>
+            </td> -->
+            
+            <td style="vertical-align:middle;">
+            <div class="video">
+                <div class="img"  onmouseover="come()"><img src="images/snisr.jpg" width=350 height=196 alt=""/></div>
+                <!-- <a href="此处填写你想要跳转的地址"> -->
+                <video id="video" style="display: none"  src="videos/t_video.mp4" width=350 height=196 onmouseout="go()" loop autoplay playsinline></video>
+                <!-- </a> -->
+            </div>
+            </td>
+    
+
               <td style="padding-left:20px; vertical-align:middle;">
                 <a href="papers/scalable-nisr/snisr.pdf"><papertitle>Scalable Neural Indoor Scene Rendering</papertitle></a>
                 <br>
@@ -67,11 +84,23 @@
                 <p>We propose a scalable neural scene reconstruction and rendering method to support distributed training and interactive rendering of large indoor scenes.</p>
               </td>
             </tr> 
+
+            
   
             <tr>
-                <td style="vertical-align:middle;">
+                <!-- <td style="vertical-align:middle;">
                     <a href="https://superxjm.github.io/source_files/ReflectiveIBR.pdf"><img src="images/sibr.png" width=350></a>
+                </td> -->
+
+                <td style="vertical-align:middle;">
+                    <div class="video2">
+                        <div class="img2"  onmouseover="come2()"><img src="images/sibr.png" style="padding-top: 23;padding-bottom: 23;" width=350 height=150 alt=""/></div>
+                        <!-- <a href="此处填写你想要跳转的地址"> -->
+                        <video id="video2"  style="display: none"  src="videos/445.mp4" width=350 height=196 onmouseout="go2()" loop autoplay playsinline></video>
+                        <!-- </a> -->
+                    </div>
                 </td>
+
                 <td style="padding:20px;vertical-align:middle">
                     <a href="https://superxjm.github.io/source_files/ReflectiveIBR.pdf"><papertitle>Scalable Image-based Indoor Scene Rendering with Reflections</papertitle></a>
                   <br>
@@ -106,3 +135,37 @@
 
   
   </body><grammarly-desktop-integration data-grammarly-shadow-root="true"></grammarly-desktop-integration></html>
+
+<script src="js/temp.js"></script>
+<script>
+    myVid=document.getElementById("video");
+    myVid.muted=true;
+    function come() {
+        $("#video").show();
+        $(".img").hide();
+        // $("#video").load();//执行一次加载一次，从头开始播放
+        // $("#video").currentTime = 0;
+        $("#video").play();
+    }
+    function go() {
+        $(".img").show();
+        $("#video").hide();
+        $("#video").pause();
+        // $("#video").get(0).currentTime = 0;
+    }
+</script>
+<script>
+    myVid=document.getElementById("video2");
+    myVid.muted=true;
+    function come2() {
+        $("#video2").show();
+        $(".img2").hide();
+        // $("#video").load();//执行一次加载一次，从头开始播放
+        $("#video2").play();
+    }
+    function go2() {
+        $(".img2").show();
+        $("#video2").hide();
+        $("#video2").pause();
+    }
+</script>
