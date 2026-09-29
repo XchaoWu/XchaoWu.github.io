@@ -9,6 +9,7 @@
   <meta property="og:description" content="A project page for TaoTex, a native 3D material generation method focused on texture detail fidelity.">
   <meta property="og:image" content="images/teaser.png">
   <title>TaoTex | Native 3D Material Generation</title>
+  <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
   <style>
     :root {
       --ink: #17231d;
@@ -244,7 +245,68 @@
 
     .hero {
       padding: 96px 0 54px;
-      text-align: center;
+    }
+
+    .overview-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 3fr) minmax(0, 1fr);
+      gap: clamp(36px, 5vw, 68px);
+      align-items: center;
+    }
+
+    .author-panel {
+      min-width: 0;
+      text-align: left;
+    }
+
+    .author-affiliation-row {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: clamp(24px, 4vw, 48px);
+      align-items: center;
+    }
+
+    .author-info {
+      min-width: 0;
+    }
+
+    .paper-preview {
+      width: min(100%, 280px);
+      margin: 0 0 0 auto;
+      filter: drop-shadow(0 22px 30px rgba(24, 38, 30, 0.22));
+      animation: paper-float 6s ease-in-out infinite;
+    }
+
+    .paper-preview a {
+      display: block;
+      transition: filter 0.25s ease;
+    }
+
+    .paper-preview a:hover,
+    .paper-preview a:focus-visible {
+      filter: brightness(1.03);
+    }
+
+    .paper-preview img {
+      display: block;
+      width: 100%;
+      height: auto;
+      border-radius: 3px;
+    }
+
+    @keyframes paper-float {
+      0%, 100% {
+        transform: translate3d(0, 0, 0) rotate(-0.35deg);
+      }
+      50% {
+        transform: translate3d(0, -12px, 0) rotate(0.35deg);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .paper-preview {
+        animation: none;
+      }
     }
 
     .eyebrow {
@@ -284,9 +346,9 @@
     .authors {
       display: flex;
       flex-wrap: wrap;
-      justify-content: center;
-      gap: 8px 20px;
-      margin: 30px auto 0;
+      justify-content: flex-start;
+      gap: 10px 20px;
+      margin: 0;
       font-size: 16px;
       font-weight: 700;
     }
@@ -298,16 +360,25 @@
     }
 
     .meta {
-      margin: 12px auto 0;
+      margin: 14px 0 0;
       color: var(--muted);
       font-size: 14px;
     }
 
     .affiliation-logo {
       display: block;
-      width: min(220px, 55vw);
+      width: min(190px, 22vw);
       height: auto;
-      margin: 18px auto 0;
+      margin: 0;
+      justify-self: end;
+    }
+
+    .overview-method {
+      margin: 30px 0 0;
+      color: #44534b;
+      font-size: 16px;
+      line-height: 1.7;
+      text-align: justify;
     }
 
     .actions {
@@ -426,15 +497,6 @@
       text-align: justify;
     }
 
-    #method .section-heading {
-      display: block;
-    }
-
-    #method .section-copy {
-      width: 100%;
-      margin: 0;
-    }
-
     .section-card {
       padding: 0;
     }
@@ -449,6 +511,170 @@
       border-radius: 0;
       background: transparent;
       object-fit: contain;
+    }
+
+    #method .section-card {
+      width: 80%;
+      margin-inline: auto;
+    }
+
+    .model-gallery-heading {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 28px;
+      margin-bottom: 24px;
+    }
+
+    .model-gallery-heading p {
+      max-width: 650px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+      text-align: right;
+    }
+
+    .model-viewer-panel {
+      overflow: hidden;
+      border-radius: 20px;
+      background: #eef2ef;
+      box-shadow: 0 18px 48px rgba(25, 52, 38, 0.10);
+    }
+
+    .model-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 22px;
+      padding: 16px 18px;
+      background: rgba(255, 255, 255, 0.88);
+    }
+
+    .model-control-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .model-control-label {
+      flex: 0 0 auto;
+      color: var(--green);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .asset-switcher {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .asset-button {
+      padding: 8px 14px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: #405048;
+      background: #ffffff;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 750;
+      cursor: pointer;
+      transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+    }
+
+    .asset-button:hover {
+      border-color: rgba(28, 78, 55, 0.45);
+      transform: translateY(-1px);
+    }
+
+    .asset-button[aria-pressed="true"] {
+      border-color: var(--green);
+      color: #ffffff;
+      background: var(--green);
+    }
+
+    .showcase-content {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+      min-height: 560px;
+    }
+
+    .input-image-panel {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      margin: 0;
+      padding: 18px;
+      border-right: 1px solid rgba(28, 78, 55, 0.10);
+      background: rgba(255, 255, 255, 0.64);
+    }
+
+    .input-image-label {
+      margin-bottom: 14px;
+      color: var(--green);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .input-image-frame {
+      display: grid;
+      flex: 1;
+      min-height: 0;
+      place-items: center;
+    }
+
+    .input-image-frame img {
+      display: block;
+      width: 100%;
+      max-height: 500px;
+      object-fit: contain;
+    }
+
+    .viewer-stage {
+      position: relative;
+      min-width: 0;
+      min-height: 560px;
+      background:
+        radial-gradient(circle at 50% 42%, #ffffff 0, #eef3ef 46%, #dfe8e2 100%);
+    }
+
+    .viewer-stage model-viewer {
+      display: block;
+      width: 100%;
+      height: 560px;
+      background: transparent;
+      --poster-color: transparent;
+      --progress-bar-color: var(--green-2);
+    }
+
+    .viewer-status,
+    .viewer-hint {
+      position: absolute;
+      z-index: 2;
+      margin: 0;
+      border-radius: 999px;
+      color: #405048;
+      background: rgba(255, 255, 255, 0.82);
+      font-size: 12px;
+      backdrop-filter: blur(8px);
+      pointer-events: none;
+    }
+
+    .viewer-status {
+      top: 16px;
+      left: 16px;
+      padding: 7px 11px;
+    }
+
+    .viewer-hint {
+      right: 16px;
+      bottom: 16px;
+      padding: 8px 12px;
     }
 
     .citation {
@@ -485,6 +711,26 @@
 
       .hero {
         padding: 58px 0 40px;
+      }
+
+      .overview-grid {
+        grid-template-columns: 1fr;
+        gap: 42px;
+      }
+
+      .author-affiliation-row {
+        grid-template-columns: 1fr;
+        gap: 22px;
+      }
+
+      .affiliation-logo {
+        width: min(220px, 55vw);
+        justify-self: start;
+      }
+
+      .paper-preview {
+        width: min(72%, 260px);
+        margin: 0 auto;
       }
 
       .teaser-copy {
@@ -525,6 +771,47 @@
         min-height: 230px;
       }
 
+      .model-gallery-heading,
+      .model-toolbar,
+      .model-control-group {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .model-gallery-heading p {
+        text-align: left;
+      }
+
+      .asset-switcher {
+        justify-content: flex-start;
+      }
+
+      .showcase-content {
+        grid-template-columns: 1fr;
+      }
+
+      .input-image-panel {
+        min-height: 320px;
+        border-right: 0;
+        border-bottom: 1px solid rgba(28, 78, 55, 0.10);
+      }
+
+      .input-image-frame img {
+        max-height: 280px;
+      }
+
+      .viewer-stage,
+      .viewer-stage model-viewer {
+        min-height: 430px;
+        height: 430px;
+      }
+
+      .viewer-hint {
+        right: 12px;
+        bottom: 12px;
+        max-width: calc(100% - 24px);
+      }
+
     }
   </style>
 </head>
@@ -547,32 +834,52 @@
   </section>
 
   <section class="shell hero" id="overview">
-    <!-- <p class="eyebrow">Paper coming soon</p> -->
-    <div class="authors" aria-label="Authors">
-      <a href="../../index.html">Xiuchao Wu*</a>
-      <a href="https://larrrry1412.github.io/">Shuichang Lai*</a>
-      <span>Jiangjing Lyu<sup>†</sup></span>
-      <span>Chengfei Lyu<sup>†</sup></span>
-    </div>
-    <p class="meta">* Equal contribution &nbsp;·&nbsp; † Corresponding authors</p>
-    <img class="affiliation-logo" src="images/logo.png" alt="Alibaba">
-    <!-- <p class="meta">Venue: ??</p> -->
+    <div class="overview-grid">
+      <div class="author-panel">
+        <div class="author-affiliation-row">
+          <img class="affiliation-logo" src="images/logo.png" alt="Alibaba">
+          <div class="author-info">
+            <div class="authors" aria-label="Authors">
+              <a href="../../index.html">Xiuchao Wu*</a>
+              <a href="https://larrrry1412.github.io/">Shuichang Lai*</a>
+              <span>Jiangjing Lyu<sup>†</sup></span>
+              <span>Chengfei Lyu<sup>†</sup></span>
+            </div>
+            <p class="meta">* Equal contribution &nbsp;·&nbsp; † Corresponding authors</p>
+          </div>
+        </div>
+        <p class="overview-method">We propose a native material generation model with the capability to recover texture details from both single- and multi-view inputs. For training this model, we develop a 3D asset data construction agent based on the Qwen LLM, which enables the automatic creation of diverse 3D assets with detailed text, logo patterns, and various material properties. To better capture fine details from the conditional images, we propose a Multi-level Feature Fusion module that adaptively integrates both semantic and local information, allowing a more faithful reconstruction. To mitigate the accuracy degradation caused by the 3D VAE, we use a two-stage training strategy, starting with latent-space loss and then switching to pixel-space loss. Furthermore, we scale TaoTex to multi-view inputs by introducing learnable viewpoint embeddings. Combined with our constructed dataset and trained with a low-SNR schedule, this enables accurate and consistent texture reconstruction across different views.</p>
+      </div>
 
-    <!-- <nav class="actions" aria-label="Project resources">
-      <span class="button pending" aria-disabled="true">Paper · ??</span>
-      <span class="button pending" aria-disabled="true">Code · ??</span>
-    </nav> -->
+      <figure class="paper-preview">
+        <a href="https://arxiv.org/pdf/2609.34934" target="_blank" rel="noopener noreferrer" aria-label="Open the TaoTex paper on arXiv">
+          <img src="images/paper.jpg" alt="Preview of the TaoTex paper">
+        </a>
+      </figure>
+    </div>
   </section>
 
   <main class="shell">
-    <!-- Replace or add the expected assets inside papers/taotex/images/. -->
-    <section class="section" id="method">
+
+    <!-- <section class="section" id="problem">
       <div class="section-heading">
         <p class="section-copy">
-We propose a native material generation model with the capability to recover texture details from both single- and multi-view inputs. 
+We propose a native material generation model with the capability to recover texture details from both single- and multi-view inputs.
 For training this model, we develop a 3D asset data construction agent based on the Qwen LLM, which enables the automatic creation of diverse 3D assets with detailed text, logo patterns, and various material properties. To better capture fine details from the conditional images, we propose a Multi-level Feature Fusion module that adaptively integrates both semantic and local information, allowing a more faithful reconstruction. To mitigate the accuracy degradation caused by the 3D VAE, we use a two-stage training strategy, starting with latent-space loss and then switching to pixel-space loss. Furthermore, we scale TaoTex to multi-view inputs by introducing learnable viewpoint embeddings. Combined with our constructed dataset and trained with a low-SNR schedule, this enables accurate and consistent texture reconstruction across different views.
         </p>
       </div>
+      <div class="section-card">
+        <object data="images/problem.png" type="image/png">
+          <div class="asset-fallback">
+            Method figure placeholder
+            <code>images/problem.png</code>
+          </div>
+        </object>
+      </div>
+    </section> -->
+
+    <!-- Replace or add the expected assets inside papers/taotex/images/. -->
+    <!-- <section class="section" id="method">
       <div class="section-card">
         <object data="images/method.png" type="image/png">
           <div class="asset-fallback">
@@ -580,6 +887,51 @@ For training this model, we develop a 3D asset data construction agent based on 
             <code>images/method.png</code>
           </div>
         </object>
+      </div>
+    </section> -->
+
+    <section class="section" id="interactive-3d">
+      <div class="model-gallery-heading">
+        <h2>Interactive 3D Showcase</h2>
+      </div>
+
+      <div class="model-viewer-panel">
+        <div class="model-toolbar">
+          <div class="model-control-group">
+            <span class="model-control-label">Object</span>
+            <div class="asset-switcher" id="asset-switcher" role="group" aria-label="Select 3D object"></div>
+          </div>
+        </div>
+
+        <div class="showcase-content">
+          <figure class="input-image-panel">
+            <figcaption class="input-image-label">Input Image</figcaption>
+            <div class="input-image-frame">
+              <img id="showcase-input-image" src="showcase/cloth.png" alt="Input image for Cloth">
+            </div>
+          </figure>
+
+          <div class="viewer-stage">
+            <model-viewer id="taotex-model-viewer"
+              alt="Interactive TaoTex showcase model"
+              camera-controls
+              camera-orbit="0deg 75deg 105%"
+              auto-rotate
+              auto-rotate-delay="3000"
+              rotation-per-second="8deg"
+              disable-zoom
+              touch-action="pan-y"
+              environment-image="neutral"
+              shadow-intensity="1.15"
+              shadow-softness="0.85"
+              exposure="1"
+              loading="lazy"
+              interaction-prompt="auto">
+            </model-viewer>
+            <p class="viewer-status" id="viewer-status" aria-live="polite">Loading Cloth…</p>
+            <p class="viewer-hint">Drag to rotate · Right-drag to pan</p>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -625,5 +977,110 @@ For training this model, we develop a 3D asset data construction agent based on 
   <footer>
     <div class="shell">TaoTex project page · Last updated September 2026</div>
   </footer>
+
+  <script>
+    (() => {
+      const models = [
+        { id: 'cloth', label: 'Cloth', src: 'showcase/cloth.glb', image: 'showcase/cloth.png' },
+        { id: 'bag', label: 'Bag', src: 'showcase/bag.glb', image: 'showcase/bag.png' },
+        { id: 'shield', label: 'Shield', src: 'showcase/shield.glb', image: 'showcase/shield.png' },
+        // { id: 'vase', label: 'Vase', src: 'showcase/vase.glb', image: 'showcase/vase.png' },
+        // { id: 'paint', label: 'Paint', src: 'showcase/paint.glb', image: 'showcase/paint.png' }
+      ];
+
+      const viewer = document.querySelector('#taotex-model-viewer');
+      const inputImage = document.querySelector('#showcase-input-image');
+      const status = document.querySelector('#viewer-status');
+      const assetSwitcher = document.querySelector('#asset-switcher');
+      const initialCameraOrbit = '0deg 75deg 105%';
+      let currentModel = models[0];
+      let cameraRadius = null;
+      let minimumCameraRadius = null;
+      let maximumCameraRadius = null;
+
+      const resetModelView = () => {
+        viewer.setAttribute('camera-orbit', initialCameraOrbit);
+        if (typeof viewer.resetTurntableRotation === 'function') {
+          viewer.resetTurntableRotation();
+        }
+      };
+
+      const initializeZoomRange = () => {
+        resetModelView();
+        viewer.jumpCameraToGoal();
+        requestAnimationFrame(() => {
+          cameraRadius = viewer.getCameraOrbit().radius;
+          minimumCameraRadius = cameraRadius * 0.95;
+          maximumCameraRadius = cameraRadius * (300 / 105);
+        });
+      };
+
+      const loadModel = (model) => {
+        currentModel = model;
+        cameraRadius = null;
+        minimumCameraRadius = null;
+        maximumCameraRadius = null;
+        status.textContent = `Loading ${model.label}…`;
+        inputImage.src = model.image;
+        inputImage.alt = `Input image for ${model.label}`;
+        viewer.alt = `Interactive 3D view of ${model.label}`;
+        resetModelView();
+        viewer.setAttribute('src', model.src);
+        [...assetSwitcher.children].forEach((button) => {
+          button.setAttribute('aria-pressed', String(button.dataset.modelId === model.id));
+        });
+      };
+
+      models.forEach((model, index) => {
+        const button = document.createElement('button');
+        button.className = 'asset-button';
+        button.type = 'button';
+        button.textContent = model.label;
+        button.dataset.modelId = model.id;
+        button.setAttribute('aria-pressed', String(index === 0));
+        button.addEventListener('click', () => {
+          if (currentModel !== model) loadModel(model);
+        });
+        assetSwitcher.append(button);
+      });
+
+      viewer.addEventListener('wheel', (event) => {
+        if (cameraRadius === null) return;
+
+        event.preventDefault();
+        const deltaMultiplier = event.deltaMode === 1
+          ? 16
+          : event.deltaMode === 2
+            ? window.innerHeight
+            : 1;
+        const zoomFactor = Math.exp(event.deltaY * deltaMultiplier * 0.0015);
+        cameraRadius = Math.min(
+          maximumCameraRadius,
+          Math.max(minimumCameraRadius, cameraRadius * zoomFactor)
+        );
+
+        const { theta, phi } = viewer.getCameraOrbit();
+        viewer.setAttribute('camera-orbit', `${theta}rad ${phi}rad ${cameraRadius}m`);
+      }, { passive: false });
+
+      viewer.addEventListener('progress', (event) => {
+        const progress = Math.round(event.detail.totalProgress * 100);
+        status.textContent = progress < 100
+          ? `Loading ${currentModel.label} · ${progress}%`
+          : `${currentModel.label} ready`;
+      });
+
+      viewer.addEventListener('load', () => {
+        initializeZoomRange();
+        status.textContent = `${currentModel.label} ready`;
+      });
+
+      viewer.addEventListener('error', () => {
+        status.textContent = `${currentModel.label} could not be loaded`;
+      });
+
+      loadModel(currentModel);
+    })();
+  </script>
 </body>
 </html>
