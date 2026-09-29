@@ -426,12 +426,22 @@ body {
 
 .img-exp {
 	display: flex;
-	gap: 30px; /* 设置图片间隔 */
-	justify-content: flex-start; /* 可选，居中显示 */
+	width: 100%;
+	align-items: center;
+	justify-content: flex-start;
+	gap: clamp(14px, 3vw, 30px);
 }
 
 .img-exp img {
+	display: block;
+	width: 210px;
+	max-width: 30%;
+	height: auto;
+	object-fit: contain;
+}
 
+.img-exp img:nth-child(3) {
+	width: 230px;
 }
 
 .publication-list {

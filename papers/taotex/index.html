@@ -1,0 +1,629 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="Xiuchao Wu">
+  <meta name="description" content="TaoTex: Boosting Texture Detail Fidelity for Native 3D Material Generation">
+  <meta property="og:title" content="TaoTex: Boosting Texture Detail Fidelity for Native 3D Material Generation">
+  <meta property="og:description" content="A project page for TaoTex, a native 3D material generation method focused on texture detail fidelity.">
+  <meta property="og:image" content="images/teaser.png">
+  <title>TaoTex | Native 3D Material Generation</title>
+  <style>
+    :root {
+      --ink: #17231d;
+      --muted: #65736b;
+      --paper: #fbfcfa;
+      --panel: #ffffff;
+      --green: #1c4e37;
+      --green-2: #2f7452;
+      --line: #dce6df;
+      --wash: #edf4ef;
+      --shadow: 0 18px 50px rgba(26, 56, 40, 0.10);
+      --radius: 22px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 12% 2%, rgba(102, 153, 121, 0.14), transparent 30rem),
+        linear-gradient(180deg, #f7faf7 0, var(--paper) 34rem);
+      font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.65;
+    }
+
+    a {
+      color: inherit;
+    }
+
+    .shell {
+      width: min(1120px, calc(100% - 40px));
+      margin: 0 auto;
+    }
+
+    .topbar-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 10;
+      width: 100%;
+      color: #ffffff;
+      background: linear-gradient(180deg, rgba(8, 20, 13, 0.62), rgba(8, 20, 13, 0));
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 76px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.26);
+    }
+
+    .brand {
+      color: #ffffff;
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      text-decoration: none;
+      text-shadow: 0 1px 12px rgba(0, 0, 0, 0.26);
+    }
+
+    .home-link {
+      color: rgba(255, 255, 255, 0.88);
+      font-size: 14px;
+      font-weight: 650;
+      text-decoration: none;
+      text-shadow: 0 1px 12px rgba(0, 0, 0, 0.26);
+      transition: color 0.2s ease;
+    }
+
+    .home-link:hover {
+      color: #ffffff;
+    }
+
+    .teaser-hero {
+      position: relative;
+      width: 100%;
+      overflow: hidden;
+      background: #203a2b;
+    }
+
+    .teaser-hero::after {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      background: linear-gradient(180deg, rgba(8, 20, 13, 0.10) 48%, rgba(8, 20, 13, 0.48) 100%);
+      content: "";
+      pointer-events: none;
+    }
+
+    .teaser-image {
+      display: block;
+      width: 100%;
+      height: auto;
+      transform-origin: center;
+      will-change: transform;
+      animation: teaser-drift 48s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite alternate;
+    }
+
+    @keyframes teaser-drift {
+      0% {
+        transform: scale(1.09) translate3d(-1.6%, -0.8%, 0);
+      }
+      19% {
+        transform: scale(1.09) translate3d(1.2%, -1.3%, 0);
+      }
+      41% {
+        transform: scale(1.09) translate3d(1.7%, 0.7%, 0);
+      }
+      63% {
+        transform: scale(1.09) translate3d(-0.7%, 1.3%, 0);
+      }
+      82% {
+        transform: scale(1.09) translate3d(-1.8%, 0.3%, 0);
+      }
+      100% {
+        transform: scale(1.09) translate3d(0.8%, -0.9%, 0);
+      }
+    }
+
+    .teaser-copy {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      z-index: 2;
+      width: min(1100px, calc(100% - 48px));
+      text-align: center;
+      transform: translate(-50%, -50%);
+    }
+
+    .teaser-title {
+      width: 100%;
+      margin: 0;
+      color: #ffffff;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(42px, 6.5vw, 80px);
+      font-weight: 500;
+      letter-spacing: -0.055em;
+      line-height: 1.02;
+      text-shadow: 0 3px 24px rgba(0, 0, 0, 0.72);
+    }
+
+    .title-gradient {
+      color: #ff6a00;
+      background: linear-gradient(90deg, #ff9a32 0%, #ff6a00 52%, #e94b00 100%);
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .teaser-subtitle {
+      max-width: 760px;
+      margin: 24px auto 0;
+      color: #9c9a9a;
+      background: linear-gradient(90deg, rgba(255, 255, 255, 0.70) 0%, #ffffff 36%, #ff9a32 50%, #ffffff 64%, rgba(255, 255, 255, 0.70) 100%);
+      background-size: 240% 100%;
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-size: clamp(16px, 2vw, 21px);
+      font-weight: 600;
+      line-height: 1.5;
+      filter: drop-shadow(0 2px 10px rgba(0, 0, 0, 0.68));
+      animation: subtitle-flow 7s linear infinite;
+    }
+
+    @keyframes subtitle-flow {
+      from {
+        background-position: 180% 50%;
+      }
+      to {
+        background-position: -180% 50%;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .teaser-image {
+        animation: none;
+        transform: scale(1.09);
+      }
+
+      .teaser-subtitle {
+        animation: none;
+        background-position: 50% 50%;
+      }
+    }
+
+    .scroll-cue {
+      position: absolute;
+      left: 50%;
+      z-index: 2;
+      bottom: 26px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      color: rgba(255, 255, 255, 0.92);
+      font-size: 11px;
+      font-weight: 750;
+      letter-spacing: 0.14em;
+      text-shadow: 0 1px 10px rgba(0, 0, 0, 0.34);
+      text-transform: uppercase;
+      transform: translateX(-50%);
+    }
+
+    .scroll-cue::after {
+      width: 9px;
+      height: 9px;
+      border-right: 2px solid currentColor;
+      border-bottom: 2px solid currentColor;
+      content: "";
+      transform: rotate(45deg);
+      animation: scroll-hint 1.8s ease-in-out infinite;
+    }
+
+    @keyframes scroll-hint {
+      0%, 100% {
+        opacity: 0.55;
+        transform: translateY(0) rotate(45deg);
+      }
+      50% {
+        opacity: 1;
+        transform: translateY(6px) rotate(45deg);
+      }
+    }
+
+    .hero {
+      padding: 96px 0 54px;
+      text-align: center;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      margin: 0 0 22px;
+      padding: 7px 13px;
+      border: 1px solid rgba(28, 78, 55, 0.22);
+      border-radius: 999px;
+      color: var(--green);
+      background: rgba(237, 244, 239, 0.78);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .eyebrow::before {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--green-2);
+      content: "";
+    }
+
+    h1 {
+      max-width: 980px;
+      margin: 0 auto;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(42px, 6.5vw, 76px);
+      font-weight: 500;
+      letter-spacing: -0.055em;
+      line-height: 1.02;
+    }
+
+    .authors {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px 20px;
+      margin: 30px auto 0;
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .authors a {
+      color: var(--green);
+      text-decoration-color: rgba(28, 78, 55, 0.35);
+      text-underline-offset: 4px;
+    }
+
+    .meta {
+      margin: 12px auto 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .affiliation-logo {
+      display: block;
+      width: min(220px, 55vw);
+      height: auto;
+      margin: 18px auto 0;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 11px;
+      margin-top: 30px;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 112px;
+      min-height: 44px;
+      padding: 0 18px;
+      border: 1px solid var(--green);
+      border-radius: 999px;
+      color: #fff;
+      background: var(--green);
+      font-size: 14px;
+      font-weight: 750;
+      text-decoration: none;
+      box-shadow: 0 8px 18px rgba(28, 78, 55, 0.14);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 11px 25px rgba(28, 78, 55, 0.20);
+    }
+
+    .button.pending {
+      border-color: var(--line);
+      color: var(--muted);
+      background: rgba(255, 255, 255, 0.72);
+      box-shadow: none;
+      cursor: default;
+    }
+
+    main {
+      padding-bottom: 80px;
+    }
+
+    .media-frame {
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+
+    .media-frame {
+      margin-bottom: 68px;
+    }
+
+    .media-frame object,
+    .media-frame img,
+    .media-frame video {
+      display: block;
+      width: 100%;
+      min-height: 360px;
+      border: 0;
+      background: var(--wash);
+      object-fit: cover;
+    }
+
+    .asset-fallback {
+      display: grid;
+      min-height: 420px;
+      place-items: center;
+      padding: 48px 24px;
+      color: var(--green);
+      background:
+        linear-gradient(135deg, rgba(28, 78, 55, 0.09), transparent 60%),
+        var(--wash);
+      font-size: 16px;
+      font-weight: 750;
+      text-align: center;
+    }
+
+    .asset-fallback code {
+      display: block;
+      margin-top: 7px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .section {
+      margin-top: 72px;
+    }
+
+    .section-heading {
+      display: grid;
+      grid-template-columns: minmax(170px, 0.38fr) minmax(0, 1fr);
+      gap: 42px;
+      align-items: start;
+      margin-bottom: 26px;
+    }
+
+    h2 {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(30px, 4vw, 44px);
+      font-weight: 500;
+      letter-spacing: -0.04em;
+      line-height: 1.08;
+    }
+
+    .section-copy {
+      margin: 2px 0 0;
+      color: #44534b;
+      font-size: 17px;
+      text-align: justify;
+    }
+
+    #method .section-heading {
+      display: block;
+    }
+
+    #method .section-copy {
+      width: 100%;
+      margin: 0;
+    }
+
+    .section-card {
+      padding: 0;
+    }
+
+    .section-card object,
+    .section-card img {
+      display: block;
+      width: 100%;
+      min-height: 0;
+      overflow: visible;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      object-fit: contain;
+    }
+
+    .citation {
+      position: relative;
+      overflow-x: auto;
+      margin: 0;
+      padding: 24px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      color: #313231;
+      background: #e3e3e3;
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      font-size: 13px;
+      line-height: 1.7;
+      white-space: pre;
+    }
+
+    footer {
+      padding: 30px 0 42px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 13px;
+      text-align: center;
+    }
+
+    @media (max-width: 760px) {
+      .shell {
+        width: min(100% - 26px, 1120px);
+      }
+
+      .topbar {
+        min-height: 64px;
+      }
+
+      .hero {
+        padding: 58px 0 40px;
+      }
+
+      .teaser-copy {
+        width: calc(100% - 32px);
+      }
+
+      .teaser-title {
+        font-size: clamp(38px, 11vw, 58px);
+      }
+
+      .teaser-subtitle {
+        margin-top: 18px;
+        font-size: clamp(14px, 4.2vw, 18px);
+      }
+
+      .section {
+        margin-top: 54px;
+      }
+
+      .section-heading {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+
+      .section-copy {
+        font-size: 16px;
+        text-align: left;
+      }
+
+      .media-frame {
+        margin-bottom: 54px;
+      }
+
+      .media-frame object,
+      .media-frame img,
+      .media-frame video,
+      .asset-fallback {
+        min-height: 230px;
+      }
+
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar-overlay">
+    <div class="shell topbar">
+      <a class="brand" href="index.html" aria-label="TaoTex home">TaoTex</a>
+      <a class="home-link" href="../../index.html">Xiuchao Wu · Home</a>
+    </div>
+  </header>
+
+  <!-- Full-width teaser shown at its original aspect ratio without cropping. -->
+  <section class="teaser-hero">
+    <img class="teaser-image" src="images/teaser.png" alt="TaoTex teaser image">
+    <div class="teaser-copy">
+      <h1 class="teaser-title"><span class="title-gradient">TaoTex</span>: Boosting Texture Detail Fidelity for Native 3D Material Generation</h1>
+      <p class="teaser-subtitle">Preserving intricate patterns and text in native 3D material generation.</p>
+    </div>
+    <div class="scroll-cue" aria-hidden="true">Scroll to explore</div>
+  </section>
+
+  <section class="shell hero" id="overview">
+    <!-- <p class="eyebrow">Paper coming soon</p> -->
+    <div class="authors" aria-label="Authors">
+      <a href="../../index.html">Xiuchao Wu*</a>
+      <a href="https://larrrry1412.github.io/">Shuichang Lai*</a>
+      <span>Jiangjing Lyu<sup>†</sup></span>
+      <span>Chengfei Lyu<sup>†</sup></span>
+    </div>
+    <p class="meta">* Equal contribution &nbsp;·&nbsp; † Corresponding authors</p>
+    <img class="affiliation-logo" src="images/logo.png" alt="Alibaba">
+    <!-- <p class="meta">Venue: ??</p> -->
+
+    <!-- <nav class="actions" aria-label="Project resources">
+      <span class="button pending" aria-disabled="true">Paper · ??</span>
+      <span class="button pending" aria-disabled="true">Code · ??</span>
+    </nav> -->
+  </section>
+
+  <main class="shell">
+    <!-- Replace or add the expected assets inside papers/taotex/images/. -->
+    <section class="section" id="method">
+      <div class="section-heading">
+        <p class="section-copy">
+We propose a native material generation model with the capability to recover texture details from both single- and multi-view inputs. 
+For training this model, we develop a 3D asset data construction agent based on the Qwen LLM, which enables the automatic creation of diverse 3D assets with detailed text, logo patterns, and various material properties. To better capture fine details from the conditional images, we propose a Multi-level Feature Fusion module that adaptively integrates both semantic and local information, allowing a more faithful reconstruction. To mitigate the accuracy degradation caused by the 3D VAE, we use a two-stage training strategy, starting with latent-space loss and then switching to pixel-space loss. Furthermore, we scale TaoTex to multi-view inputs by introducing learnable viewpoint embeddings. Combined with our constructed dataset and trained with a low-SNR schedule, this enables accurate and consistent texture reconstruction across different views.
+        </p>
+      </div>
+      <div class="section-card">
+        <object data="images/method.png" type="image/png">
+          <div class="asset-fallback">
+            Method figure placeholder
+            <code>images/method.png</code>
+          </div>
+        </object>
+      </div>
+    </section>
+
+    <section class="section" id="comparisons">
+      <div class="section-heading">
+        <h2>Comparisons</h2>
+        <!-- <p class="section-copy">?? Add the final qualitative comparisons and detail-fidelity discussion here.</p> -->
+      </div>
+      <div class="section-card">
+        <object data="images/comparisons.png" type="image/png">
+          <div class="asset-fallback">
+            Comparisons figure placeholder
+            <code>images/comparisons.png</code>
+          </div>
+        </object>
+        <br>
+        <object data="images/comparisons2.png" type="image/png">
+          <div class="asset-fallback">
+            Comparisons figure placeholder
+            <code>images/comparisons.png</code>
+          </div>
+        </object>
+      </div>
+    </section>
+
+    <section class="section" id="citation">
+      <div class="section-heading">
+        <h2>Citation</h2>
+        <!-- <p class="section-copy">Please use the following BibTeX entry once the publication information is available.</p> -->
+      </div>
+      <pre class="citation"><code>@misc{wu2026taotex,
+      title={TaoTex: Boosting Texture Detail Fidelity for Native 3D Material Generation}, 
+      author={Xiuchao Wu and Shuichang Lai and Jiangjing Lyu and Chengfei Lyu},
+      year={2026},
+      eprint={2609.34934},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV},
+      url={https://arxiv.org/abs/2609.34934}, 
+}</code></pre>
+    </section>
+  </main>
+
+  <footer>
+    <div class="shell">TaoTex project page · Last updated September 2026</div>
+  </footer>
+</body>
+</html>
