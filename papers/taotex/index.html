@@ -1146,8 +1146,10 @@ For training this model, we develop a 3D asset data construction agent based on 
         );
         const orbitOurs = compareOurs.getCameraOrbit();
         const orbitTrellis = compareTrellis.getCameraOrbit();
+        const tgt = compareOurs.getCameraTarget();
         compareOurs.setAttribute('camera-orbit', `${orbitOurs.theta}rad ${orbitOurs.phi}rad ${cameraRadius}m`);
         compareTrellis.setAttribute('camera-orbit', `${orbitTrellis.theta}rad ${orbitTrellis.phi}rad ${cameraRadius}m`);
+        compareTrellis.setAttribute('camera-target', `${tgt.x}m ${tgt.y}m ${tgt.z}m`);
       };
 
       compareOurs.addEventListener('wheel', (event) => {
@@ -1160,12 +1162,14 @@ For training this model, we develop a 3D asset data construction agent based on 
         applyZoomToBoth(computeZoomFactor(event));
       }, { passive: false });
 
-      // --- Sync rotation (only user-initiated drag) ---
+      // --- Sync all camera operations (rotation, zoom, pan) ---
       let activeDragViewer = null;
 
       const syncCameraTo = (source, target) => {
         const orbit = source.getCameraOrbit();
+        const tgt = source.getCameraTarget();
         target.setAttribute('camera-orbit', `${orbit.theta}rad ${orbit.phi}rad ${orbit.radius}m`);
+        target.setAttribute('camera-target', `${tgt.x}m ${tgt.y}m ${tgt.z}m`);
       };
 
       compareOurs.addEventListener('interacting-started', () => {
