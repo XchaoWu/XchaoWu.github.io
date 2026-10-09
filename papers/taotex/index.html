@@ -1079,6 +1079,7 @@ For training this model, we develop a 3D asset data construction agent based on 
       let initialRadiusOurs = null;
       let initialRadiusTrellis = null;
       let zoomScale = 1.0;
+      let zoomLock = false;
       const MIN_ZOOM = 0.5;
       const MAX_ZOOM = 300 / 105;
 
@@ -1145,8 +1146,12 @@ For training this model, we develop a 3D asset data construction agent based on 
         zoomScale = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, zoomScale * factor));
         const orbitOurs = compareOurs.getCameraOrbit();
         const orbitTrellis = compareTrellis.getCameraOrbit();
+        zoomLock = true;
         compareOurs.setAttribute('camera-orbit', `${orbitOurs.theta}rad ${orbitOurs.phi}rad ${initialRadiusOurs * zoomScale}m`);
         compareTrellis.setAttribute('camera-orbit', `${orbitTrellis.theta}rad ${orbitTrellis.phi}rad ${initialRadiusTrellis * zoomScale}m`);
+        // Hold off cross-sync for two frames so each viewer's own camera-change
+        // doesn't overwrite the peer's freshly-set radius with its stale value.
+        requestAnimationFrame(() => requestAnimationFrame(() => { zoomLock = false; }));
       };
 
       compareOurs.addEventListener('wheel', (event) => {
@@ -1165,7 +1170,7 @@ For training this model, we develop a 3D asset data construction agent based on 
       let autoRotateWasOn = false;
 
       const syncOrbit = (source, target) => {
-        if (isSyncing) return;
+        if (isSyncing || zoomLock) return;
         isSyncing = true;
         const orbit = source.getCameraOrbit();
         const targetOrbit = target.getCameraOrbit();
@@ -1187,13 +1192,14 @@ For training this model, we develop a 3D asset data construction agent based on 
 
       // While trellis is being dragged, pause ours' auto-rotate so its turntable
       // doesn't fight the reverse sync and doesn't yank trellis back.
-      compareTrellis.addEventListener('pointerdown', () => {
+      const beginTrellisDrag = () => {
+        if (trellisDragging) return;
         trellisDragging = true;
         autoRotateWasOn = compareOurs.hasAttribute('auto-rotate');
         if (autoRotateWasOn) compareOurs.removeAttribute('auto-rotate');
-      });
+      };
 
-      const onTrellisPointerUp = () => {
+      const endTrellisDrag = () => {
         if (!trellisDragging) return;
         trellisDragging = false;
         // Snap ours to trellis' final angle, clear turntable offset, then resume auto-rotate
@@ -1207,8 +1213,13 @@ For training this model, we develop a 3D asset data construction agent based on 
         autoRotateWasOn = false;
       };
 
-      window.addEventListener('pointerup', onTrellisPointerUp);
-      window.addEventListener('pointercancel', onTrellisPointerUp);
+      // Primary: model-viewer's own interaction events (work even inside the shadow DOM).
+      compareTrellis.addEventListener('interacting-started', beginTrellisDrag);
+      compareTrellis.addEventListener('interacting-finished', endTrellisDrag);
+      // Fallback for browsers that dispatch pointer events on the host element directly.
+      compareTrellis.addEventListener('pointerdown', beginTrellisDrag);
+      window.addEventListener('pointerup', endTrellisDrag);
+      window.addEventListener('pointercancel', endTrellisDrag);
 
       // --- Load events ---
       compareOurs.addEventListener('progress', (event) => {
