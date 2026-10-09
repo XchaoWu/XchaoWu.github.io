@@ -1000,9 +1000,6 @@ For training this model, we develop a 3D asset data construction agent based on 
                 alt="TRELLIS.2 result"
                 camera-controls
                 camera-orbit="0deg 75deg 105%"
-                auto-rotate
-                auto-rotate-delay="3000"
-                rotation-per-second="8deg"
                 disable-zoom
                 touch-action="pan-y"
                 environment-image="neutral"
@@ -1162,49 +1159,49 @@ For training this model, we develop a 3D asset data construction agent based on 
         applyZoomToBoth(computeZoomFactor(event));
       }, { passive: false });
 
-      // --- Sync rotation (theta/phi only, each viewer keeps own center) ---
-      let syncSource = null;
+      // --- Sync: compareOurs drives auto-rotate, compareTrellis follows ---
+      let isSyncing = false;
+      let trellisDragging = false;
 
-      const getOther = (viewer) => viewer === compareOurs ? compareTrellis : compareOurs;
-
-      const onPointerDown = (viewer) => () => {
-        syncSource = viewer;
-      };
-
-      const onPointerUp = () => {
-        if (syncSource) {
-          const target = getOther(syncSource);
-          const orbit = syncSource.getCameraOrbit();
-          const targetOrbit = target.getCameraOrbit();
-          target.setAttribute('camera-orbit', `${orbit.theta}rad ${orbit.phi}rad ${targetOrbit.radius}m`);
-          if (typeof target.resetTurntableRotation === 'function') {
-            target.resetTurntableRotation();
-          }
-          if (typeof syncSource.resetTurntableRotation === 'function') {
-            syncSource.resetTurntableRotation();
-          }
-        }
-        syncSource = null;
-      };
-
-      compareOurs.addEventListener('pointerdown', onPointerDown(compareOurs));
-      compareTrellis.addEventListener('pointerdown', onPointerDown(compareTrellis));
-      window.addEventListener('pointerup', onPointerUp);
-      window.addEventListener('pointercancel', onPointerUp);
-
-      const onCameraChange = (viewer) => {
-        if (viewer !== syncSource) return;
-        const target = getOther(viewer);
-        const orbit = viewer.getCameraOrbit();
+      const syncOrbit = (source, target) => {
+        if (isSyncing) return;
+        isSyncing = true;
+        const orbit = source.getCameraOrbit();
         const targetOrbit = target.getCameraOrbit();
         target.setAttribute('camera-orbit', `${orbit.theta}rad ${orbit.phi}rad ${targetOrbit.radius}m`);
-        if (typeof target.resetTurntableRotation === 'function') {
-          target.resetTurntableRotation();
+        requestAnimationFrame(() => { isSyncing = false; });
+      };
+
+      // compareOurs camera-change: always sync to trellis (auto-rotate + user drag)
+      compareOurs.addEventListener('camera-change', () => {
+        syncOrbit(compareOurs, compareTrellis);
+      });
+
+      // compareTrellis camera-change: only sync back when user is dragging it
+      compareTrellis.addEventListener('camera-change', () => {
+        if (!trellisDragging) return;
+        syncOrbit(compareTrellis, compareOurs);
+      });
+
+      compareTrellis.addEventListener('pointerdown', () => {
+        trellisDragging = true;
+      });
+
+      const onTrellisPointerUp = () => {
+        if (trellisDragging) {
+          trellisDragging = false;
+          // Sync final position and reset ours' turntable so auto-rotate continues from here
+          const orbit = compareTrellis.getCameraOrbit();
+          const oursOrbit = compareOurs.getCameraOrbit();
+          compareOurs.setAttribute('camera-orbit', `${orbit.theta}rad ${orbit.phi}rad ${oursOrbit.radius}m`);
+          if (typeof compareOurs.resetTurntableRotation === 'function') {
+            compareOurs.resetTurntableRotation();
+          }
         }
       };
 
-      compareOurs.addEventListener('camera-change', () => onCameraChange(compareOurs));
-      compareTrellis.addEventListener('camera-change', () => onCameraChange(compareTrellis));
+      window.addEventListener('pointerup', onTrellisPointerUp);
+      window.addEventListener('pointercancel', onTrellisPointerUp);
 
       // --- Load events ---
       compareOurs.addEventListener('progress', (event) => {
