@@ -1162,7 +1162,7 @@ For training this model, we develop a 3D asset data construction agent based on 
         applyZoomToBoth(computeZoomFactor(event));
       }, { passive: false });
 
-      // --- Sync rotation & pan (one-directional from dragged viewer) ---
+      // --- Sync rotation (theta/phi only, each viewer keeps own center) ---
       let syncSource = null;
 
       const getOther = (viewer) => viewer === compareOurs ? compareTrellis : compareOurs;
@@ -1176,9 +1176,7 @@ For training this model, we develop a 3D asset data construction agent based on 
           const target = getOther(syncSource);
           const orbit = syncSource.getCameraOrbit();
           const targetOrbit = target.getCameraOrbit();
-          const tgt = syncSource.getCameraTarget();
           target.setAttribute('camera-orbit', `${orbit.theta}rad ${orbit.phi}rad ${targetOrbit.radius}m`);
-          target.setAttribute('camera-target', `${tgt.x}m ${tgt.y}m ${tgt.z}m`);
           if (typeof target.resetTurntableRotation === 'function') {
             target.resetTurntableRotation();
           }
@@ -1199,9 +1197,7 @@ For training this model, we develop a 3D asset data construction agent based on 
         const target = getOther(viewer);
         const orbit = viewer.getCameraOrbit();
         const targetOrbit = target.getCameraOrbit();
-        const tgt = viewer.getCameraTarget();
         target.setAttribute('camera-orbit', `${orbit.theta}rad ${orbit.phi}rad ${targetOrbit.radius}m`);
-        target.setAttribute('camera-target', `${tgt.x}m ${tgt.y}m ${tgt.z}m`);
         if (typeof target.resetTurntableRotation === 'function') {
           target.resetTurntableRotation();
         }
