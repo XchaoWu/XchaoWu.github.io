@@ -1153,7 +1153,9 @@ For training this model, we develop a 3D asset data construction agent based on 
         const orbitOurs = compareOurs.getCameraOrbit();
         const orbitTrellis = compareTrellis.getCameraOrbit();
         compareOurs.setAttribute('camera-orbit', `${orbitOurs.theta}rad ${orbitOurs.phi}rad ${initialRadiusOurs * zoomScale}m`);
+        compareOurs.jumpCameraToGoal();
         compareTrellis.setAttribute('camera-orbit', `${orbitTrellis.theta}rad ${orbitTrellis.phi}rad ${initialRadiusTrellis * zoomScale}m`);
+        compareTrellis.jumpCameraToGoal();
         autoRotateActive = false;
         lastInteractionTime = performance.now();
       };
@@ -1165,10 +1167,12 @@ For training this model, we develop a 3D asset data construction agent based on 
         }, { passive: false });
       });
 
-      // ===== Sync: pointer-based, zero dependency on model-viewer internals =====
-      // Track which viewer the user is actively dragging via pointerdown on the
-      // parent .compare-cell div (composed events bubble out of shadow DOM).
-      // camera-change handlers check this flag — no reliance on event.detail.source.
+      // ===== Sync + Auto-rotate: single rAF loop, no camera-change dependency =====
+      // All logic runs every frame in requestAnimationFrame:
+      //   - If user is dragging a viewer, sync its theta/phi/pan to the other (with jumpCameraToGoal to eliminate animation lag)
+      //   - If idle, auto-rotate both viewers simultaneously
+      //   - Resume auto-rotate after 3s idle
+      // This approach is immune to camera-change event throttling or timing issues.
 
       let userDragging = null; // 'ours' | 'trellis' | null
 
@@ -1194,10 +1198,11 @@ For training this model, we develop a 3D asset data construction agent based on 
         }
       });
 
-      const syncAll = (source, target, sInitR, tInitR, sInitT, tInitT) => {
+      const syncTarget = (source, target, sInitR, tInitR, sInitT, tInitT) => {
         const sOrbit = source.getCameraOrbit();
         const tOrbit = target.getCameraOrbit();
         target.setAttribute('camera-orbit', `${sOrbit.theta}rad ${sOrbit.phi}rad ${tOrbit.radius}m`);
+        target.jumpCameraToGoal();
         if (sInitR && tInitR && sInitT && tInitT) {
           const scale = tInitR / sInitR;
           const sT = source.getCameraTarget();
@@ -1209,29 +1214,27 @@ For training this model, we develop a 3D asset data construction agent based on 
         }
       };
 
-      compareOurs.addEventListener('camera-change', () => {
-        if (userDragging !== 'ours') return;
-        syncAll(compareOurs, compareTrellis,
-          initialRadiusOurs, initialRadiusTrellis,
-          initialTargetOurs, initialTargetTrellis);
-      });
+      const mainLoop = (timestamp) => {
+        // 1. Sync: if user is dragging, mirror to the other viewer every frame
+        if (userDragging === 'ours') {
+          syncTarget(compareOurs, compareTrellis,
+            initialRadiusOurs, initialRadiusTrellis,
+            initialTargetOurs, initialTargetTrellis);
+        } else if (userDragging === 'trellis') {
+          syncTarget(compareTrellis, compareOurs,
+            initialRadiusTrellis, initialRadiusOurs,
+            initialTargetTrellis, initialTargetOurs);
+        }
 
-      compareTrellis.addEventListener('camera-change', () => {
-        if (userDragging !== 'trellis') return;
-        syncAll(compareTrellis, compareOurs,
-          initialRadiusTrellis, initialRadiusOurs,
-          initialTargetTrellis, initialTargetOurs);
-      });
-
-      // ===== Auto-rotate: JS rAF loop, updates both viewers atomically =====
-      const autoRotateLoop = (timestamp) => {
-        if (!autoRotateActive && lastInteractionTime > 0 &&
+        // 2. Resume auto-rotate after idle
+        if (!autoRotateActive && !userDragging && lastInteractionTime > 0 &&
             timestamp - lastInteractionTime > AUTO_ROTATE_RESUME_DELAY) {
           autoRotateActive = true;
           lastAutoRotateTs = null;
         }
 
-        if (autoRotateActive) {
+        // 3. Auto-rotate: add same theta delta to both viewers
+        if (autoRotateActive && !userDragging) {
           if (lastAutoRotateTs !== null) {
             const dt = timestamp - lastAutoRotateTs;
             if (dt > 0 && dt < 100) {
@@ -1239,16 +1242,19 @@ For training this model, we develop a 3D asset data construction agent based on 
               const oT = compareTrellis.getCameraOrbit();
               const dTheta = AUTO_ROTATE_SPEED * dt;
               compareOurs.setAttribute('camera-orbit', `${oO.theta + dTheta}rad ${oO.phi}rad ${oO.radius}m`);
+              compareOurs.jumpCameraToGoal();
               compareTrellis.setAttribute('camera-orbit', `${oT.theta + dTheta}rad ${oT.phi}rad ${oT.radius}m`);
+              compareTrellis.jumpCameraToGoal();
             }
           }
           lastAutoRotateTs = timestamp;
         } else {
           lastAutoRotateTs = null;
         }
-        requestAnimationFrame(autoRotateLoop);
+
+        requestAnimationFrame(mainLoop);
       };
-      requestAnimationFrame(autoRotateLoop);
+      requestAnimationFrame(mainLoop);
 
       // ===== Load events =====
       compareOurs.addEventListener('progress', (event) => {
