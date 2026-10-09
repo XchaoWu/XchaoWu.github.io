@@ -1159,9 +1159,10 @@ For training this model, we develop a 3D asset data construction agent based on 
         applyZoomToBoth(computeZoomFactor(event));
       }, { passive: false });
 
-      // --- Sync: compareOurs drives auto-rotate, compareTrellis follows ---
+      // --- Sync: ours owns auto-rotate; whichever viewer the user drags becomes the temporary master ---
       let isSyncing = false;
       let trellisDragging = false;
+      let autoRotateWasOn = false;
 
       const syncOrbit = (source, target) => {
         if (isSyncing) return;
@@ -1172,32 +1173,38 @@ For training this model, we develop a 3D asset data construction agent based on 
         requestAnimationFrame(() => { isSyncing = false; });
       };
 
-      // compareOurs camera-change: always sync to trellis (auto-rotate + user drag)
+      // ours camera-change: sync to trellis unless trellis is the active drag master
       compareOurs.addEventListener('camera-change', () => {
+        if (trellisDragging) return;
         syncOrbit(compareOurs, compareTrellis);
       });
 
-      // compareTrellis camera-change: only sync back when user is dragging it
+      // trellis camera-change: only mirror back while user is actively dragging trellis
       compareTrellis.addEventListener('camera-change', () => {
         if (!trellisDragging) return;
         syncOrbit(compareTrellis, compareOurs);
       });
 
+      // While trellis is being dragged, pause ours' auto-rotate so its turntable
+      // doesn't fight the reverse sync and doesn't yank trellis back.
       compareTrellis.addEventListener('pointerdown', () => {
         trellisDragging = true;
+        autoRotateWasOn = compareOurs.hasAttribute('auto-rotate');
+        if (autoRotateWasOn) compareOurs.removeAttribute('auto-rotate');
       });
 
       const onTrellisPointerUp = () => {
-        if (trellisDragging) {
-          trellisDragging = false;
-          // Sync final position and reset ours' turntable so auto-rotate continues from here
-          const orbit = compareTrellis.getCameraOrbit();
-          const oursOrbit = compareOurs.getCameraOrbit();
-          compareOurs.setAttribute('camera-orbit', `${orbit.theta}rad ${orbit.phi}rad ${oursOrbit.radius}m`);
-          if (typeof compareOurs.resetTurntableRotation === 'function') {
-            compareOurs.resetTurntableRotation();
-          }
+        if (!trellisDragging) return;
+        trellisDragging = false;
+        // Snap ours to trellis' final angle, clear turntable offset, then resume auto-rotate
+        const orbit = compareTrellis.getCameraOrbit();
+        const oursOrbit = compareOurs.getCameraOrbit();
+        compareOurs.setAttribute('camera-orbit', `${orbit.theta}rad ${orbit.phi}rad ${oursOrbit.radius}m`);
+        if (typeof compareOurs.resetTurntableRotation === 'function') {
+          compareOurs.resetTurntableRotation();
         }
+        if (autoRotateWasOn) compareOurs.setAttribute('auto-rotate', '');
+        autoRotateWasOn = false;
       };
 
       window.addEventListener('pointerup', onTrellisPointerUp);
