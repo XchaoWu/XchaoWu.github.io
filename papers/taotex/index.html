@@ -1197,27 +1197,27 @@ For training this model, we develop a 3D asset data construction agent based on 
       });
 
       const syncTarget = (source, target, sInitR, tInitR, sInitT, tInitT) => {
+        // Mirror source's CURRENT camera state to the follower, then snap once.
+        // Because the source itself moves smoothly, mirroring its current pose
+        // every frame gives zero-lag AND smooth motion for BOTH rotate and pan.
         const sOrbit = source.getCameraOrbit();
         const tOrbit = target.getCameraOrbit();
 
-        // Lock target's current pan position so jumpCameraToGoal doesn't snap it
-        const curT = target.getCameraTarget();
-        target.setAttribute('camera-target', `${curT.x}m ${curT.y}m ${curT.z}m`);
-
-        // Sync rotation + snap (no lag)
+        // Keep the follower's own radius (preserves independent per-model zoom)
         target.setAttribute('camera-orbit', `${sOrbit.theta}rad ${sOrbit.phi}rad ${tOrbit.radius}m`);
-        target.jumpCameraToGoal();
 
-        // Now set new pan position AFTER jump → interpolates smoothly
+        // Mirror pan as a scaled delta from each model's own center
         if (sInitR && tInitR && sInitT && tInitT) {
           const scale = tInitR / sInitR;
           const sT = source.getCameraTarget();
-          const dX = (sT.x - sInitT.x) * scale;
-          const dY = (sT.y - sInitT.y) * scale;
-          const dZ = (sT.z - sInitT.z) * scale;
-          target.setAttribute('camera-target',
-            `${tInitT.x + dX}m ${tInitT.y + dY}m ${tInitT.z + dZ}m`);
+          const tX = tInitT.x + (sT.x - sInitT.x) * scale;
+          const tY = tInitT.y + (sT.y - sInitT.y) * scale;
+          const tZ = tInitT.z + (sT.z - sInitT.z) * scale;
+          target.setAttribute('camera-target', `${tX}m ${tY}m ${tZ}m`);
         }
+
+        // Single snap → no rotation lag, pan tracks exactly in lockstep
+        target.jumpCameraToGoal();
       };
 
       const mainLoop = (timestamp) => {
