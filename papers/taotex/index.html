@@ -1079,9 +1079,11 @@ For training this model, we develop a 3D asset data construction agent based on 
       const initialCameraOrbit = '0deg 75deg 105%';
 
       let currentModel = models[0];
-      let cameraRadius = null;
-      let minimumCameraRadius = null;
-      let maximumCameraRadius = null;
+      let initialRadiusOurs = null;
+      let initialRadiusTrellis = null;
+      let zoomScale = 1.0;
+      const MIN_ZOOM = 0.5;
+      const MAX_ZOOM = 300 / 105;
 
       const resetViewer = (v) => {
         v.setAttribute('camera-orbit', initialCameraOrbit);
@@ -1090,17 +1092,10 @@ For training this model, we develop a 3D asset data construction agent based on 
         }
       };
 
-      const initializeZoomRange = (v) => {
-        resetViewer(v);
-        v.jumpCameraToGoal();
-        requestAnimationFrame(() => {
-          cameraRadius = v.getCameraOrbit().radius;
-          minimumCameraRadius = cameraRadius * 0.5;
-          maximumCameraRadius = cameraRadius * (300 / 105);
-        });
-      };
-
       const loadCompareViewers = (model) => {
+        initialRadiusOurs = null;
+        initialRadiusTrellis = null;
+        zoomScale = 1.0;
         resetViewer(compareOurs);
         resetViewer(compareTrellis);
         compareOurs.setAttribute('src', model.src);
@@ -1111,9 +1106,6 @@ For training this model, we develop a 3D asset data construction agent based on 
 
       const loadModel = (model) => {
         currentModel = model;
-        cameraRadius = null;
-        minimumCameraRadius = null;
-        maximumCameraRadius = null;
         status.textContent = `Loading ${model.label}…`;
         inputImage.src = model.image;
         inputImage.alt = `Input image for ${model.label}`;
@@ -1141,7 +1133,7 @@ For training this model, we develop a 3D asset data construction agent based on 
         assetSwitcher.append(button);
       });
 
-      // --- Wheel zoom (synced across both viewers) ---
+      // --- Zoom (shared scale, per-viewer radius) ---
       const computeZoomFactor = (event) => {
         const deltaMultiplier = event.deltaMode === 1
           ? 16
@@ -1152,17 +1144,12 @@ For training this model, we develop a 3D asset data construction agent based on 
       };
 
       const applyZoomToBoth = (factor) => {
-        if (cameraRadius === null) return;
-        cameraRadius = Math.min(
-          maximumCameraRadius,
-          Math.max(minimumCameraRadius, cameraRadius * factor)
-        );
+        if (initialRadiusOurs === null || initialRadiusTrellis === null) return;
+        zoomScale = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, zoomScale * factor));
         const orbitOurs = compareOurs.getCameraOrbit();
         const orbitTrellis = compareTrellis.getCameraOrbit();
-        const tgt = compareOurs.getCameraTarget();
-        compareOurs.setAttribute('camera-orbit', `${orbitOurs.theta}rad ${orbitOurs.phi}rad ${cameraRadius}m`);
-        compareTrellis.setAttribute('camera-orbit', `${orbitTrellis.theta}rad ${orbitTrellis.phi}rad ${cameraRadius}m`);
-        compareTrellis.setAttribute('camera-target', `${tgt.x}m ${tgt.y}m ${tgt.z}m`);
+        compareOurs.setAttribute('camera-orbit', `${orbitOurs.theta}rad ${orbitOurs.phi}rad ${initialRadiusOurs * zoomScale}m`);
+        compareTrellis.setAttribute('camera-orbit', `${orbitTrellis.theta}rad ${orbitTrellis.phi}rad ${initialRadiusTrellis * zoomScale}m`);
       };
 
       compareOurs.addEventListener('wheel', (event) => {
@@ -1175,8 +1162,17 @@ For training this model, we develop a 3D asset data construction agent based on 
         applyZoomToBoth(computeZoomFactor(event));
       }, { passive: false });
 
-      // --- Sync all camera operations (rotation, zoom, pan) ---
+      // --- Sync rotation & pan via pointer tracking ---
       let isSyncing = false;
+      let userInteracting = false;
+
+      const onPointerDown = () => { userInteracting = true; };
+      const onPointerUp = () => { userInteracting = false; };
+
+      compareOurs.addEventListener('pointerdown', onPointerDown);
+      compareTrellis.addEventListener('pointerdown', onPointerDown);
+      window.addEventListener('pointerup', onPointerUp);
+      window.addEventListener('pointercancel', onPointerUp);
 
       const syncCameraTo = (source, target) => {
         if (isSyncing) return;
@@ -1188,16 +1184,13 @@ For training this model, we develop a 3D asset data construction agent based on 
         requestAnimationFrame(() => { isSyncing = false; });
       };
 
-      compareOurs.addEventListener('camera-change', (event) => {
-        if (event.detail.source === 'user') {
-          syncCameraTo(compareOurs, compareTrellis);
-        }
-      });
-      compareTrellis.addEventListener('camera-change', (event) => {
-        if (event.detail.source === 'user') {
-          syncCameraTo(compareTrellis, compareOurs);
-        }
-      });
+      const onCameraChange = (source, target) => {
+        if (!userInteracting || isSyncing) return;
+        syncCameraTo(source, target);
+      };
+
+      compareOurs.addEventListener('camera-change', () => onCameraChange(compareOurs, compareTrellis));
+      compareTrellis.addEventListener('camera-change', () => onCameraChange(compareTrellis, compareOurs));
 
       // --- Load events ---
       compareOurs.addEventListener('progress', (event) => {
@@ -1208,7 +1201,11 @@ For training this model, we develop a 3D asset data construction agent based on 
       });
 
       compareOurs.addEventListener('load', () => {
-        initializeZoomRange(compareOurs);
+        resetViewer(compareOurs);
+        compareOurs.jumpCameraToGoal();
+        requestAnimationFrame(() => {
+          initialRadiusOurs = compareOurs.getCameraOrbit().radius;
+        });
         status.textContent = `${currentModel.label} ready`;
       });
 
@@ -1217,9 +1214,11 @@ For training this model, we develop a 3D asset data construction agent based on 
       });
 
       compareTrellis.addEventListener('load', () => {
-        if (typeof compareTrellis.resetTurntableRotation === 'function') {
-          compareTrellis.resetTurntableRotation();
-        }
+        resetViewer(compareTrellis);
+        compareTrellis.jumpCameraToGoal();
+        requestAnimationFrame(() => {
+          initialRadiusTrellis = compareTrellis.getCameraOrbit().radius;
+        });
       });
 
       loadModel(currentModel);
