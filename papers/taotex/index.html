@@ -1153,9 +1153,7 @@ For training this model, we develop a 3D asset data construction agent based on 
         const orbitOurs = compareOurs.getCameraOrbit();
         const orbitTrellis = compareTrellis.getCameraOrbit();
         compareOurs.setAttribute('camera-orbit', `${orbitOurs.theta}rad ${orbitOurs.phi}rad ${initialRadiusOurs * zoomScale}m`);
-        compareOurs.jumpCameraToGoal();
         compareTrellis.setAttribute('camera-orbit', `${orbitTrellis.theta}rad ${orbitTrellis.phi}rad ${initialRadiusTrellis * zoomScale}m`);
-        compareTrellis.jumpCameraToGoal();
         autoRotateActive = false;
         lastInteractionTime = performance.now();
       };
@@ -1202,7 +1200,6 @@ For training this model, we develop a 3D asset data construction agent based on 
         const sOrbit = source.getCameraOrbit();
         const tOrbit = target.getCameraOrbit();
         target.setAttribute('camera-orbit', `${sOrbit.theta}rad ${sOrbit.phi}rad ${tOrbit.radius}m`);
-        target.jumpCameraToGoal();
         if (sInitR && tInitR && sInitT && tInitT) {
           const scale = tInitR / sInitR;
           const sT = source.getCameraTarget();
@@ -1242,9 +1239,7 @@ For training this model, we develop a 3D asset data construction agent based on 
               const oT = compareTrellis.getCameraOrbit();
               const dTheta = AUTO_ROTATE_SPEED * dt;
               compareOurs.setAttribute('camera-orbit', `${oO.theta + dTheta}rad ${oO.phi}rad ${oO.radius}m`);
-              compareOurs.jumpCameraToGoal();
               compareTrellis.setAttribute('camera-orbit', `${oT.theta + dTheta}rad ${oT.phi}rad ${oT.radius}m`);
-              compareTrellis.jumpCameraToGoal();
             }
           }
           lastAutoRotateTs = timestamp;
