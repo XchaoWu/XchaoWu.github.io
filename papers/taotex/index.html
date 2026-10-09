@@ -1199,10 +1199,16 @@ For training this model, we develop a 3D asset data construction agent based on 
       const syncTarget = (source, target, sInitR, tInitR, sInitT, tInitT) => {
         const sOrbit = source.getCameraOrbit();
         const tOrbit = target.getCameraOrbit();
-        // 1. Sync rotation (theta/phi) + snap immediately → no rotation lag
+
+        // Lock target's current pan position so jumpCameraToGoal doesn't snap it
+        const curT = target.getCameraTarget();
+        target.setAttribute('camera-target', `${curT.x}m ${curT.y}m ${curT.z}m`);
+
+        // Sync rotation + snap (no lag)
         target.setAttribute('camera-orbit', `${sOrbit.theta}rad ${sOrbit.phi}rad ${tOrbit.radius}m`);
         target.jumpCameraToGoal();
-        // 2. Sync pan (camera-target) AFTER jump → new goal interpolates smoothly
+
+        // Now set new pan position AFTER jump → interpolates smoothly
         if (sInitR && tInitR && sInitT && tInitT) {
           const scale = tInitR / sInitR;
           const sT = source.getCameraTarget();
