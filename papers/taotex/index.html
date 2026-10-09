@@ -1079,8 +1079,14 @@ For training this model, we develop a 3D asset data construction agent based on 
       let initialTargetTrellis = null; // { x, y, z } — trellis' auto-framed center
       let zoomScale = 1.0;
       let zoomLock = false;
+      let isSyncing = false;
+      let autoRotateActive = true;
+      let lastInteractionTime = 0;
+      let lastAutoRotateTs = null;
       const MIN_ZOOM = 0.5;
       const MAX_ZOOM = 300 / 105;
+      const AUTO_ROTATE_SPEED = 8 * Math.PI / 180 / 1000; // rad per ms
+      const AUTO_ROTATE_RESUME_DELAY = 3000; // ms
 
       const resetViewer = (v) => {
         v.setAttribute('camera-orbit', initialCameraOrbit);
@@ -1152,9 +1158,9 @@ For training this model, we develop a 3D asset data construction agent based on 
         compareOurs.setAttribute('camera-orbit', `${orbitOurs.theta}rad ${orbitOurs.phi}rad ${initialRadiusOurs * zoomScale}m`);
         compareTrellis.setAttribute('camera-orbit', `${orbitTrellis.theta}rad ${orbitTrellis.phi}rad ${initialRadiusTrellis * zoomScale}m`);
         requestAnimationFrame(() => requestAnimationFrame(() => { zoomLock = false; }));
-        // Also pause auto-rotate during zoom and resume after 3 s
-        pauseAutoRotate();
-        scheduleAutoRotateResume();
+        // Pause auto-rotate on zoom; will resume after idle
+        autoRotateActive = false;
+        lastInteractionTime = performance.now();
       };
 
       [compareOurs, compareTrellis].forEach((v) => {
@@ -1164,88 +1170,72 @@ For training this model, we develop a 3D asset data construction agent based on 
         }, { passive: false });
       });
 
-      // ===== Full sync: theta + phi (rotation) + pan delta =====
-      let isSyncing = false;
+      // ===== Sync: fully symmetric, driven by camera-change source =====
+      // Key insight: event.detail.source tells us WHO caused the change.
+      //   'user' / 'interaction' → user is directly manipulating THIS viewer
+      //   'none' → programmatic (our sync, zoom, or auto-rotate)
+      // We only propagate when the source is user-initiated.
 
-      const syncAll = (source, target, sInitRadius, tInitRadius, sInitTarget, tInitTarget) => {
+      const isUserSource = (event) => {
+        const s = event.detail && event.detail.source;
+        return s === 'user' || s === 'interaction';
+      };
+
+      const syncAll = (source, target, sInitR, tInitR, sInitT, tInitT) => {
         if (isSyncing || zoomLock) return;
         isSyncing = true;
         const sOrbit = source.getCameraOrbit();
         const tOrbit = target.getCameraOrbit();
-        // Sync rotation angles; keep target's own radius (models have different sizes)
+        // Sync rotation angles; keep target's own radius (models differ in size)
         target.setAttribute('camera-orbit', `${sOrbit.theta}rad ${sOrbit.phi}rad ${tOrbit.radius}m`);
-        // Sync pan as a delta from each model's own initial center, scaled by radius ratio
-        if (sInitRadius && tInitRadius && sInitTarget && tInitTarget) {
-          const scale = tInitRadius / sInitRadius;
-          const sTarget = source.getCameraTarget();
-          const dX = (sTarget.x - sInitTarget.x) * scale;
-          const dY = (sTarget.y - sInitTarget.y) * scale;
-          const dZ = (sTarget.z - sInitTarget.z) * scale;
+        // Sync pan as delta from each model's own center, scaled by radius ratio
+        if (sInitR && tInitR && sInitT && tInitT) {
+          const scale = tInitR / sInitR;
+          const sT = source.getCameraTarget();
+          const dX = (sT.x - sInitT.x) * scale;
+          const dY = (sT.y - sInitT.y) * scale;
+          const dZ = (sT.z - sInitT.z) * scale;
           target.setAttribute('camera-target',
-            `${tInitTarget.x + dX}m ${tInitTarget.y + dY}m ${tInitTarget.z + dZ}m`);
+            `${tInitT.x + dX}m ${tInitT.y + dY}m ${tInitT.z + dZ}m`);
         }
         requestAnimationFrame(() => { isSyncing = false; });
       };
 
-      // ===== Interaction tracking: who is the active master? =====
-      let activeViewer = null; // 'ours' | 'trellis' | null
-
-      // Camera-change handlers — fully symmetric, gated by activeViewer
-      compareOurs.addEventListener('camera-change', () => {
-        if (autoRotateActive || activeViewer === 'trellis') return;
+      // --- Ours camera-change: if user is dragging ours, sync to trellis ---
+      compareOurs.addEventListener('camera-change', (event) => {
+        if (isSyncing || zoomLock) return;
+        if (!isUserSource(event)) return;
+        autoRotateActive = false;
+        lastInteractionTime = performance.now();
         syncAll(compareOurs, compareTrellis,
           initialRadiusOurs, initialRadiusTrellis,
           initialTargetOurs, initialTargetTrellis);
       });
 
-      compareTrellis.addEventListener('camera-change', () => {
-        if (autoRotateActive || activeViewer === 'ours') return;
+      // --- Trellis camera-change: if user is dragging trellis, sync to ours ---
+      compareTrellis.addEventListener('camera-change', (event) => {
+        if (isSyncing || zoomLock) return;
+        if (!isUserSource(event)) return;
+        autoRotateActive = false;
+        lastInteractionTime = performance.now();
         syncAll(compareTrellis, compareOurs,
           initialRadiusTrellis, initialRadiusOurs,
           initialTargetTrellis, initialTargetOurs);
       });
 
-      // Detect which viewer the user is interacting with
-      [
-        { viewer: compareOurs, id: 'ours' },
-        { viewer: compareTrellis, id: 'trellis' },
-      ].forEach(({ viewer, id }) => {
-        viewer.addEventListener('interacting-started', () => {
-          activeViewer = id;
-          pauseAutoRotate();
-        });
-        viewer.addEventListener('interacting-finished', () => {
-          if (activeViewer === id) activeViewer = null;
-          scheduleAutoRotateResume();
-        });
-      });
-
-      // ===== Auto-rotate: JS-driven, updates both viewers simultaneously =====
-      let autoRotateActive = true;
-      let autoRotateResumeTimer = null;
-      let lastAutoRotateTs = null;
-      const AUTO_ROTATE_SPEED = 8 * Math.PI / 180 / 1000; // rad per ms
-
-      const pauseAutoRotate = () => {
-        autoRotateActive = false;
-        lastAutoRotateTs = null;
-        clearTimeout(autoRotateResumeTimer);
-      };
-
-      const scheduleAutoRotateResume = () => {
-        clearTimeout(autoRotateResumeTimer);
-        autoRotateResumeTimer = setTimeout(() => {
+      // ===== Auto-rotate: JS rAF loop, updates both viewers atomically =====
+      const autoRotateLoop = (timestamp) => {
+        // Resume after idle
+        if (!autoRotateActive && lastInteractionTime > 0 &&
+            timestamp - lastInteractionTime > AUTO_ROTATE_RESUME_DELAY) {
           autoRotateActive = true;
           lastAutoRotateTs = null;
-        }, 3000);
-      };
+        }
 
-      const autoRotateLoop = (timestamp) => {
         if (autoRotateActive) {
           if (lastAutoRotateTs !== null) {
             const dt = timestamp - lastAutoRotateTs;
             if (dt > 0 && dt < 100) {
-              // Bypass sync guards — we update both viewers atomically
               isSyncing = true;
               zoomLock = true;
               const oO = compareOurs.getCameraOrbit();
@@ -1253,7 +1243,6 @@ For training this model, we develop a 3D asset data construction agent based on 
               const dTheta = AUTO_ROTATE_SPEED * dt;
               compareOurs.setAttribute('camera-orbit', `${oO.theta + dTheta}rad ${oO.phi}rad ${oO.radius}m`);
               compareTrellis.setAttribute('camera-orbit', `${oT.theta + dTheta}rad ${oT.phi}rad ${oT.radius}m`);
-              // Release guards next frame so camera-change events from this frame are swallowed
               requestAnimationFrame(() => { isSyncing = false; zoomLock = false; });
             }
           }
