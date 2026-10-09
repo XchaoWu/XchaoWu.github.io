@@ -1176,42 +1176,25 @@ For training this model, we develop a 3D asset data construction agent based on 
       }, { passive: false });
 
       // --- Sync all camera operations (rotation, zoom, pan) ---
-      let activeDragViewer = null;
+      let isSyncing = false;
 
       const syncCameraTo = (source, target) => {
+        if (isSyncing) return;
+        isSyncing = true;
         const orbit = source.getCameraOrbit();
         const tgt = source.getCameraTarget();
         target.setAttribute('camera-orbit', `${orbit.theta}rad ${orbit.phi}rad ${orbit.radius}m`);
         target.setAttribute('camera-target', `${tgt.x}m ${tgt.y}m ${tgt.z}m`);
+        requestAnimationFrame(() => { isSyncing = false; });
       };
 
-      compareOurs.addEventListener('interacting-started', () => {
-        activeDragViewer = compareOurs;
-      });
-      compareTrellis.addEventListener('interacting-started', () => {
-        activeDragViewer = compareTrellis;
-      });
-
-      compareOurs.addEventListener('interacting-finished', () => {
-        if (activeDragViewer === compareOurs) {
-          syncCameraTo(compareOurs, compareTrellis);
-          activeDragViewer = null;
-        }
-      });
-      compareTrellis.addEventListener('interacting-finished', () => {
-        if (activeDragViewer === compareTrellis) {
-          syncCameraTo(compareTrellis, compareOurs);
-          activeDragViewer = null;
-        }
-      });
-
       compareOurs.addEventListener('camera-change', (event) => {
-        if (event.detail.source === 'user' && activeDragViewer === compareOurs) {
+        if (event.detail.source === 'user') {
           syncCameraTo(compareOurs, compareTrellis);
         }
       });
       compareTrellis.addEventListener('camera-change', (event) => {
-        if (event.detail.source === 'user' && activeDragViewer === compareTrellis) {
+        if (event.detail.source === 'user') {
           syncCameraTo(compareTrellis, compareOurs);
         }
       });
