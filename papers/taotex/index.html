@@ -1178,8 +1178,9 @@ For training this model, we develop a 3D asset data construction agent based on 
         if (isSyncing) return;
         isSyncing = true;
         const orbit = source.getCameraOrbit();
+        const targetOrbit = target.getCameraOrbit();
         const tgt = source.getCameraTarget();
-        target.setAttribute('camera-orbit', `${orbit.theta}rad ${orbit.phi}rad ${orbit.radius}m`);
+        target.setAttribute('camera-orbit', `${orbit.theta}rad ${orbit.phi}rad ${targetOrbit.radius}m`);
         target.setAttribute('camera-target', `${tgt.x}m ${tgt.y}m ${tgt.z}m`);
         requestAnimationFrame(() => { isSyncing = false; });
       };
