@@ -1121,6 +1121,11 @@ For training this model, we develop a 3D asset data construction agent based on 
         }
       };
 
+      // Guards so a late progress(=100%) event fired after 'load' can't
+      // re-show the overlay and hide the freshly loaded model.
+      let oursLoaded = false;
+      let trellisLoaded = false;
+
       let currentModel = models[0];
       let initialRadiusOurs = null;
       let initialRadiusTrellis = null;
@@ -1149,6 +1154,8 @@ For training this model, we develop a 3D asset data construction agent based on 
         initialTargetOurs = null;
         initialTargetTrellis = null;
         zoomScale = 1.0;
+        oursLoaded = false;
+        trellisLoaded = false;
         setCellLoading(oursCell, oursFill, true);
         setCellLoading(trellisCell, trellisFill, true);
         resetViewer(compareOurs);
@@ -1330,11 +1337,13 @@ For training this model, we develop a 3D asset data construction agent based on 
 
       // ===== Load events =====
       compareOurs.addEventListener('progress', (event) => {
-        setCellLoading(oursCell, oursFill, true,
-          Math.round(event.detail.totalProgress * 100));
+        if (oursLoaded) return;
+        const pct = Math.round(event.detail.totalProgress * 100);
+        if (pct < 100) setCellLoading(oursCell, oursFill, true, pct);
       });
 
       compareOurs.addEventListener('load', () => {
+        oursLoaded = true;
         resetViewer(compareOurs);
         compareOurs.jumpCameraToGoal();
         requestAnimationFrame(() => {
@@ -1345,15 +1354,18 @@ For training this model, we develop a 3D asset data construction agent based on 
       });
 
       compareOurs.addEventListener('error', () => {
+        oursLoaded = true;
         setCellLoading(oursCell, oursFill, false);
       });
 
       compareTrellis.addEventListener('progress', (event) => {
-        setCellLoading(trellisCell, trellisFill, true,
-          Math.round(event.detail.totalProgress * 100));
+        if (trellisLoaded) return;
+        const pct = Math.round(event.detail.totalProgress * 100);
+        if (pct < 100) setCellLoading(trellisCell, trellisFill, true, pct);
       });
 
       compareTrellis.addEventListener('load', () => {
+        trellisLoaded = true;
         resetViewer(compareTrellis);
         compareTrellis.jumpCameraToGoal();
         requestAnimationFrame(() => {
@@ -1364,6 +1376,7 @@ For training this model, we develop a 3D asset data construction agent based on 
       });
 
       compareTrellis.addEventListener('error', () => {
+        trellisLoaded = true;
         setCellLoading(trellisCell, trellisFill, false);
       });
 
