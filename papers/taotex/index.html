@@ -1174,14 +1174,26 @@ For training this model, we develop a 3D asset data construction agent based on 
 
       let userDragging = null; // 'ours' | 'trellis' | null
 
+      // Remember each viewer's orbit from the previous sync frame so we can tell
+      // whether the current gesture is rotating (orbit changed) or panning (only
+      // camera-target changed). Rotation is snapped instantly; pan is left to
+      // model-viewer's natural eased interpolation so it stays smooth.
+      const prevSourceOrbit = new Map();
+      const seedOrbit = (v) => {
+        const o = v.getCameraOrbit();
+        prevSourceOrbit.set(v, { theta: o.theta, phi: o.phi });
+      };
+
       const cells = document.querySelectorAll('.compare-cell');
       cells[0].addEventListener('pointerdown', () => {
         userDragging = 'ours';
         autoRotateActive = false;
+        seedOrbit(compareOurs);
       });
       cells[1].addEventListener('pointerdown', () => {
         userDragging = 'trellis';
         autoRotateActive = false;
+        seedOrbit(compareTrellis);
       });
       window.addEventListener('pointerup', () => {
         if (userDragging) {
@@ -1197,13 +1209,16 @@ For training this model, we develop a 3D asset data construction agent based on 
       });
 
       const syncTarget = (source, target, sInitR, tInitR, sInitT, tInitT) => {
-        // Mirror source's CURRENT camera state to the follower, then snap once.
-        // Because the source itself moves smoothly, mirroring its current pose
-        // every frame gives zero-lag AND smooth motion for BOTH rotate and pan.
         const sOrbit = source.getCameraOrbit();
         const tOrbit = target.getCameraOrbit();
+        const prev = prevSourceOrbit.get(source);
+        const rotating = !!prev && (
+          Math.abs(sOrbit.theta - prev.theta) > 1e-4 ||
+          Math.abs(sOrbit.phi - prev.phi) > 1e-4
+        );
+        prevSourceOrbit.set(source, { theta: sOrbit.theta, phi: sOrbit.phi });
 
-        // Keep the follower's own radius (preserves independent per-model zoom)
+        // Mirror rotation angles; keep the follower's own radius (independent zoom)
         target.setAttribute('camera-orbit', `${sOrbit.theta}rad ${sOrbit.phi}rad ${tOrbit.radius}m`);
 
         // Mirror pan as a scaled delta from each model's own center
@@ -1216,8 +1231,9 @@ For training this model, we develop a 3D asset data construction agent based on 
           target.setAttribute('camera-target', `${tX}m ${tY}m ${tZ}m`);
         }
 
-        // Single snap → no rotation lag, pan tracks exactly in lockstep
-        target.jumpCameraToGoal();
+        // Rotating → snap instantly (no lag). Panning only → leave goal to
+        // model-viewer's eased interpolation so the follower pans smoothly.
+        if (rotating) target.jumpCameraToGoal();
       };
 
       const mainLoop = (timestamp) => {
