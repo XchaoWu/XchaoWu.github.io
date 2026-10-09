@@ -1154,7 +1154,6 @@ For training this model, we develop a 3D asset data construction agent based on 
         const orbitTrellis = compareTrellis.getCameraOrbit();
         compareOurs.setAttribute('camera-orbit', `${orbitOurs.theta}rad ${orbitOurs.phi}rad ${initialRadiusOurs * zoomScale}m`);
         compareTrellis.setAttribute('camera-orbit', `${orbitTrellis.theta}rad ${orbitTrellis.phi}rad ${initialRadiusTrellis * zoomScale}m`);
-        // Pause auto-rotate on zoom; will resume after idle
         autoRotateActive = false;
         lastInteractionTime = performance.now();
       };
@@ -1166,25 +1165,39 @@ For training this model, we develop a 3D asset data construction agent based on 
         }, { passive: false });
       });
 
-      // ===== Sync: fully symmetric, driven by camera-change source =====
-      // Core principle: event.detail.source tells us who caused the change.
-      //   'user' / 'interaction' → user is directly manipulating THIS viewer
-      //   'none' → programmatic (our sync, zoom, or auto-rotate)
-      // We ONLY propagate user-initiated events. Programmatic events are
-      // inherently skipped by the source check, eliminating all feedback loops
-      // without needing isSyncing/zoomLock guards.
+      // ===== Sync: pointer-based, zero dependency on model-viewer internals =====
+      // Track which viewer the user is actively dragging via pointerdown on the
+      // parent .compare-cell div (composed events bubble out of shadow DOM).
+      // camera-change handlers check this flag — no reliance on event.detail.source.
 
-      const isUserSource = (event) => {
-        const s = event.detail && event.detail.source;
-        return s === 'user' || s === 'interaction';
-      };
+      let userDragging = null; // 'ours' | 'trellis' | null
+
+      const cells = document.querySelectorAll('.compare-cell');
+      cells[0].addEventListener('pointerdown', () => {
+        userDragging = 'ours';
+        autoRotateActive = false;
+      });
+      cells[1].addEventListener('pointerdown', () => {
+        userDragging = 'trellis';
+        autoRotateActive = false;
+      });
+      window.addEventListener('pointerup', () => {
+        if (userDragging) {
+          userDragging = null;
+          lastInteractionTime = performance.now();
+        }
+      });
+      window.addEventListener('pointercancel', () => {
+        if (userDragging) {
+          userDragging = null;
+          lastInteractionTime = performance.now();
+        }
+      });
 
       const syncAll = (source, target, sInitR, tInitR, sInitT, tInitT) => {
         const sOrbit = source.getCameraOrbit();
         const tOrbit = target.getCameraOrbit();
-        // Sync rotation angles; keep target's own radius (models differ in size)
         target.setAttribute('camera-orbit', `${sOrbit.theta}rad ${sOrbit.phi}rad ${tOrbit.radius}m`);
-        // Sync pan as delta from each model's own center, scaled by radius ratio
         if (sInitR && tInitR && sInitT && tInitT) {
           const scale = tInitR / sInitR;
           const sT = source.getCameraTarget();
@@ -1196,21 +1209,15 @@ For training this model, we develop a 3D asset data construction agent based on 
         }
       };
 
-      // --- Ours camera-change: if user is dragging ours, sync to trellis ---
-      compareOurs.addEventListener('camera-change', (event) => {
-        if (!isUserSource(event)) return;
-        autoRotateActive = false;
-        lastInteractionTime = performance.now();
+      compareOurs.addEventListener('camera-change', () => {
+        if (userDragging !== 'ours') return;
         syncAll(compareOurs, compareTrellis,
           initialRadiusOurs, initialRadiusTrellis,
           initialTargetOurs, initialTargetTrellis);
       });
 
-      // --- Trellis camera-change: if user is dragging trellis, sync to ours ---
-      compareTrellis.addEventListener('camera-change', (event) => {
-        if (!isUserSource(event)) return;
-        autoRotateActive = false;
-        lastInteractionTime = performance.now();
+      compareTrellis.addEventListener('camera-change', () => {
+        if (userDragging !== 'trellis') return;
         syncAll(compareTrellis, compareOurs,
           initialRadiusTrellis, initialRadiusOurs,
           initialTargetTrellis, initialTargetOurs);
@@ -1218,7 +1225,6 @@ For training this model, we develop a 3D asset data construction agent based on 
 
       // ===== Auto-rotate: JS rAF loop, updates both viewers atomically =====
       const autoRotateLoop = (timestamp) => {
-        // Resume after idle
         if (!autoRotateActive && lastInteractionTime > 0 &&
             timestamp - lastInteractionTime > AUTO_ROTATE_RESUME_DELAY) {
           autoRotateActive = true;
