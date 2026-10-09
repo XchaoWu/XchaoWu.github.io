@@ -1162,36 +1162,53 @@ For training this model, we develop a 3D asset data construction agent based on 
         applyZoomToBoth(computeZoomFactor(event));
       }, { passive: false });
 
-      // --- Sync rotation & pan via pointer tracking ---
-      let isSyncing = false;
-      let userInteracting = false;
+      // --- Sync rotation & pan (one-directional from dragged viewer) ---
+      let syncSource = null;
 
-      const onPointerDown = () => { userInteracting = true; };
-      const onPointerUp = () => { userInteracting = false; };
+      const getOther = (viewer) => viewer === compareOurs ? compareTrellis : compareOurs;
 
-      compareOurs.addEventListener('pointerdown', onPointerDown);
-      compareTrellis.addEventListener('pointerdown', onPointerDown);
+      const onPointerDown = (viewer) => () => {
+        syncSource = viewer;
+      };
+
+      const onPointerUp = () => {
+        if (syncSource) {
+          const target = getOther(syncSource);
+          const orbit = syncSource.getCameraOrbit();
+          const targetOrbit = target.getCameraOrbit();
+          const tgt = syncSource.getCameraTarget();
+          target.setAttribute('camera-orbit', `${orbit.theta}rad ${orbit.phi}rad ${targetOrbit.radius}m`);
+          target.setAttribute('camera-target', `${tgt.x}m ${tgt.y}m ${tgt.z}m`);
+          if (typeof target.resetTurntableRotation === 'function') {
+            target.resetTurntableRotation();
+          }
+          if (typeof syncSource.resetTurntableRotation === 'function') {
+            syncSource.resetTurntableRotation();
+          }
+        }
+        syncSource = null;
+      };
+
+      compareOurs.addEventListener('pointerdown', onPointerDown(compareOurs));
+      compareTrellis.addEventListener('pointerdown', onPointerDown(compareTrellis));
       window.addEventListener('pointerup', onPointerUp);
       window.addEventListener('pointercancel', onPointerUp);
 
-      const syncCameraTo = (source, target) => {
-        if (isSyncing) return;
-        isSyncing = true;
-        const orbit = source.getCameraOrbit();
+      const onCameraChange = (viewer) => {
+        if (viewer !== syncSource) return;
+        const target = getOther(viewer);
+        const orbit = viewer.getCameraOrbit();
         const targetOrbit = target.getCameraOrbit();
-        const tgt = source.getCameraTarget();
+        const tgt = viewer.getCameraTarget();
         target.setAttribute('camera-orbit', `${orbit.theta}rad ${orbit.phi}rad ${targetOrbit.radius}m`);
         target.setAttribute('camera-target', `${tgt.x}m ${tgt.y}m ${tgt.z}m`);
-        requestAnimationFrame(() => { isSyncing = false; });
+        if (typeof target.resetTurntableRotation === 'function') {
+          target.resetTurntableRotation();
+        }
       };
 
-      const onCameraChange = (source, target) => {
-        if (!userInteracting || isSyncing) return;
-        syncCameraTo(source, target);
-      };
-
-      compareOurs.addEventListener('camera-change', () => onCameraChange(compareOurs, compareTrellis));
-      compareTrellis.addEventListener('camera-change', () => onCameraChange(compareTrellis, compareOurs));
+      compareOurs.addEventListener('camera-change', () => onCameraChange(compareOurs));
+      compareTrellis.addEventListener('camera-change', () => onCameraChange(compareTrellis));
 
       // --- Load events ---
       compareOurs.addEventListener('progress', (event) => {
