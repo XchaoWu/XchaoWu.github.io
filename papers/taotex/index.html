@@ -1078,8 +1078,6 @@ For training this model, we develop a 3D asset data construction agent based on 
       let initialTargetOurs = null;   // { x, y, z } — ours' auto-framed center
       let initialTargetTrellis = null; // { x, y, z } — trellis' auto-framed center
       let zoomScale = 1.0;
-      let zoomLock = false;
-      let isSyncing = false;
       let autoRotateActive = true;
       let lastInteractionTime = 0;
       let lastAutoRotateTs = null;
@@ -1154,10 +1152,8 @@ For training this model, we develop a 3D asset data construction agent based on 
         zoomScale = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, zoomScale * factor));
         const orbitOurs = compareOurs.getCameraOrbit();
         const orbitTrellis = compareTrellis.getCameraOrbit();
-        zoomLock = true;
         compareOurs.setAttribute('camera-orbit', `${orbitOurs.theta}rad ${orbitOurs.phi}rad ${initialRadiusOurs * zoomScale}m`);
         compareTrellis.setAttribute('camera-orbit', `${orbitTrellis.theta}rad ${orbitTrellis.phi}rad ${initialRadiusTrellis * zoomScale}m`);
-        requestAnimationFrame(() => requestAnimationFrame(() => { zoomLock = false; }));
         // Pause auto-rotate on zoom; will resume after idle
         autoRotateActive = false;
         lastInteractionTime = performance.now();
@@ -1171,10 +1167,12 @@ For training this model, we develop a 3D asset data construction agent based on 
       });
 
       // ===== Sync: fully symmetric, driven by camera-change source =====
-      // Key insight: event.detail.source tells us WHO caused the change.
+      // Core principle: event.detail.source tells us who caused the change.
       //   'user' / 'interaction' → user is directly manipulating THIS viewer
       //   'none' → programmatic (our sync, zoom, or auto-rotate)
-      // We only propagate when the source is user-initiated.
+      // We ONLY propagate user-initiated events. Programmatic events are
+      // inherently skipped by the source check, eliminating all feedback loops
+      // without needing isSyncing/zoomLock guards.
 
       const isUserSource = (event) => {
         const s = event.detail && event.detail.source;
@@ -1182,8 +1180,6 @@ For training this model, we develop a 3D asset data construction agent based on 
       };
 
       const syncAll = (source, target, sInitR, tInitR, sInitT, tInitT) => {
-        if (isSyncing || zoomLock) return;
-        isSyncing = true;
         const sOrbit = source.getCameraOrbit();
         const tOrbit = target.getCameraOrbit();
         // Sync rotation angles; keep target's own radius (models differ in size)
@@ -1198,12 +1194,10 @@ For training this model, we develop a 3D asset data construction agent based on 
           target.setAttribute('camera-target',
             `${tInitT.x + dX}m ${tInitT.y + dY}m ${tInitT.z + dZ}m`);
         }
-        requestAnimationFrame(() => { isSyncing = false; });
       };
 
       // --- Ours camera-change: if user is dragging ours, sync to trellis ---
       compareOurs.addEventListener('camera-change', (event) => {
-        if (isSyncing || zoomLock) return;
         if (!isUserSource(event)) return;
         autoRotateActive = false;
         lastInteractionTime = performance.now();
@@ -1214,7 +1208,6 @@ For training this model, we develop a 3D asset data construction agent based on 
 
       // --- Trellis camera-change: if user is dragging trellis, sync to ours ---
       compareTrellis.addEventListener('camera-change', (event) => {
-        if (isSyncing || zoomLock) return;
         if (!isUserSource(event)) return;
         autoRotateActive = false;
         lastInteractionTime = performance.now();
@@ -1236,14 +1229,11 @@ For training this model, we develop a 3D asset data construction agent based on 
           if (lastAutoRotateTs !== null) {
             const dt = timestamp - lastAutoRotateTs;
             if (dt > 0 && dt < 100) {
-              isSyncing = true;
-              zoomLock = true;
               const oO = compareOurs.getCameraOrbit();
               const oT = compareTrellis.getCameraOrbit();
               const dTheta = AUTO_ROTATE_SPEED * dt;
               compareOurs.setAttribute('camera-orbit', `${oO.theta + dTheta}rad ${oO.phi}rad ${oO.radius}m`);
               compareTrellis.setAttribute('camera-orbit', `${oT.theta + dTheta}rad ${oT.phi}rad ${oT.radius}m`);
-              requestAnimationFrame(() => { isSyncing = false; zoomLock = false; });
             }
           }
           lastAutoRotateTs = timestamp;
