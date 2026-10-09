@@ -678,14 +678,10 @@
     }
 
     .compare-stage {
-      display: none;
+      display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 0;
       position: relative;
-    }
-
-    .compare-stage.visible {
-      display: grid;
     }
 
     .compare-cell {
@@ -723,10 +719,6 @@
       background: transparent;
       --poster-color: transparent;
       --progress-bar-color: var(--green-2);
-    }
-
-    .viewer-stage.hidden {
-      display: none;
     }
 
     .citation {
@@ -964,14 +956,6 @@ For training this model, we develop a 3D asset data construction agent based on 
             <span class="model-control-label">Object</span>
             <div class="asset-switcher" id="asset-switcher" role="group" aria-label="Select 3D object"></div>
           </div>
-          <div class="model-control-group">
-            <span class="model-control-label">View</span>
-            <div class="asset-switcher" id="method-switcher" role="group" aria-label="Select viewing mode">
-              <button class="asset-button" type="button" data-method="ours" aria-pressed="true">Ours</button>
-              <button class="asset-button" type="button" data-method="trellis" aria-pressed="false">TRELLIS.2</button>
-              <button class="asset-button" type="button" data-method="compare" aria-pressed="false">Compare</button>
-            </div>
-          </div>
         </div>
 
         <div class="showcase-content">
@@ -981,27 +965,6 @@ For training this model, we develop a 3D asset data construction agent based on 
               <img id="showcase-input-image" src="showcase/cloth.png" alt="Input image for Cloth">
             </div>
           </figure>
-
-          <div class="viewer-stage" id="viewer-stage">
-            <model-viewer id="taotex-model-viewer"
-              alt="Interactive TaoTex showcase model"
-              camera-controls
-              camera-orbit="0deg 75deg 105%"
-              auto-rotate
-              auto-rotate-delay="3000"
-              rotation-per-second="8deg"
-              disable-zoom
-              touch-action="pan-y"
-              environment-image="neutral"
-              shadow-intensity="1.15"
-              shadow-softness="0.85"
-              exposure="1"
-              loading="lazy"
-              interaction-prompt="auto">
-            </model-viewer>
-            <p class="viewer-status" id="viewer-status" aria-live="polite">Loading Cloth…</p>
-            <p class="viewer-hint">Drag to rotate · Right-drag to pan</p>
-          </div>
 
           <div class="compare-stage" id="compare-stage">
             <div class="compare-cell">
@@ -1042,6 +1005,8 @@ For training this model, we develop a 3D asset data construction agent based on 
                 interaction-prompt="none">
               </model-viewer>
             </div>
+            <p class="viewer-status" id="viewer-status" aria-live="polite">Loading Cloth…</p>
+            <p class="viewer-hint">Drag to rotate · Right-drag to pan</p>
           </div>
         </div>
       </div>
@@ -1098,19 +1063,14 @@ For training this model, we develop a 3D asset data construction agent based on 
         { id: 'shield', label: 'Shield', src: 'showcase/shield.glb', trellis2Src: 'showcase/shield_trellis2.glb', image: 'showcase/shield.png' },
       ];
 
-      const viewer = document.querySelector('#taotex-model-viewer');
-      const viewerStage = document.querySelector('#viewer-stage');
-      const compareStage = document.querySelector('#compare-stage');
       const compareOurs = document.querySelector('#compare-ours-viewer');
       const compareTrellis = document.querySelector('#compare-trellis-viewer');
       const inputImage = document.querySelector('#showcase-input-image');
       const status = document.querySelector('#viewer-status');
       const assetSwitcher = document.querySelector('#asset-switcher');
-      const methodSwitcher = document.querySelector('#method-switcher');
       const initialCameraOrbit = '0deg 75deg 105%';
 
       let currentModel = models[0];
-      let currentMethod = 'ours';
       let cameraRadius = null;
       let minimumCameraRadius = null;
       let maximumCameraRadius = null;
@@ -1122,43 +1082,19 @@ For training this model, we develop a 3D asset data construction agent based on 
         }
       };
 
-      const methodLabel = () => {
-        if (currentMethod === 'trellis') return ' (TRELLIS.2)';
-        return '';
-      };
-
       const initializeZoomRange = (v) => {
         resetViewer(v);
         v.jumpCameraToGoal();
         requestAnimationFrame(() => {
           cameraRadius = v.getCameraOrbit().radius;
-          minimumCameraRadius = cameraRadius * 0.95;
+          minimumCameraRadius = cameraRadius * 0.5;
           maximumCameraRadius = cameraRadius * (300 / 105);
         });
-      };
-
-      const getSrc = (model, method) => {
-        if (method === 'trellis') return model.trellis2Src;
-        return model.src;
-      };
-
-      const loadSingleViewer = (model) => {
-        const src = getSrc(model, currentMethod);
-        status.textContent = `Loading ${model.label}${methodLabel()}…`;
-        resetViewer(viewer);
-        viewer.setAttribute('src', src);
-        viewer.alt = `Interactive 3D view of ${model.label}`;
       };
 
       const loadCompareViewers = (model) => {
         resetViewer(compareOurs);
         resetViewer(compareTrellis);
-        if (typeof compareOurs.resetTurntableRotation === 'function') {
-          compareOurs.resetTurntableRotation();
-        }
-        if (typeof compareTrellis.resetTurntableRotation === 'function') {
-          compareTrellis.resetTurntableRotation();
-        }
         compareOurs.setAttribute('src', model.src);
         compareOurs.alt = `TaoTex result: ${model.label}`;
         compareTrellis.setAttribute('src', model.trellis2Src);
@@ -1170,40 +1106,13 @@ For training this model, we develop a 3D asset data construction agent based on 
         cameraRadius = null;
         minimumCameraRadius = null;
         maximumCameraRadius = null;
+        status.textContent = `Loading ${model.label}…`;
         inputImage.src = model.image;
         inputImage.alt = `Input image for ${model.label}`;
         [...assetSwitcher.children].forEach((button) => {
           button.setAttribute('aria-pressed', String(button.dataset.modelId === model.id));
         });
-
-        if (currentMethod === 'compare') {
-          loadCompareViewers(model);
-        } else {
-          loadSingleViewer(model);
-        }
-      };
-
-      const switchMethod = (method) => {
-        if (method === currentMethod) return;
-        currentMethod = method;
-
-        [...methodSwitcher.querySelectorAll('.asset-button')].forEach((btn) => {
-          btn.setAttribute('aria-pressed', String(btn.dataset.method === method));
-        });
-
-        cameraRadius = null;
-        minimumCameraRadius = null;
-        maximumCameraRadius = null;
-
-        if (method === 'compare') {
-          viewerStage.classList.add('hidden');
-          compareStage.classList.add('visible');
-          loadCompareViewers(currentModel);
-        } else {
-          viewerStage.classList.remove('hidden');
-          compareStage.classList.remove('visible');
-          loadSingleViewer(currentModel);
-        }
+        loadCompareViewers(model);
       };
 
       models.forEach((model, index) => {
@@ -1219,13 +1128,7 @@ For training this model, we develop a 3D asset data construction agent based on 
         assetSwitcher.append(button);
       });
 
-      methodSwitcher.querySelectorAll('.asset-button').forEach((btn) => {
-        btn.addEventListener('click', () => {
-          switchMethod(btn.dataset.method);
-        });
-      });
-
-      // --- Wheel zoom ---
+      // --- Wheel zoom (synced across both viewers) ---
       const computeZoomFactor = (event) => {
         const deltaMultiplier = event.deltaMode === 1
           ? 16
@@ -1233,16 +1136,6 @@ For training this model, we develop a 3D asset data construction agent based on 
             ? window.innerHeight
             : 1;
         return Math.exp(event.deltaY * deltaMultiplier * 0.0015);
-      };
-
-      const applyZoomToViewer = (v, factor) => {
-        if (cameraRadius === null) return;
-        cameraRadius = Math.min(
-          maximumCameraRadius,
-          Math.max(minimumCameraRadius, cameraRadius * factor)
-        );
-        const { theta, phi } = v.getCameraOrbit();
-        v.setAttribute('camera-orbit', `${theta}rad ${phi}rad ${cameraRadius}m`);
       };
 
       const applyZoomToBoth = (factor) => {
@@ -1257,12 +1150,6 @@ For training this model, we develop a 3D asset data construction agent based on 
         compareTrellis.setAttribute('camera-orbit', `${orbitTrellis.theta}rad ${orbitTrellis.phi}rad ${cameraRadius}m`);
       };
 
-      viewer.addEventListener('wheel', (event) => {
-        if (currentMethod === 'compare') return;
-        event.preventDefault();
-        applyZoomToViewer(viewer, computeZoomFactor(event));
-      }, { passive: false });
-
       compareOurs.addEventListener('wheel', (event) => {
         event.preventDefault();
         applyZoomToBoth(computeZoomFactor(event));
@@ -1273,7 +1160,7 @@ For training this model, we develop a 3D asset data construction agent based on 
         applyZoomToBoth(computeZoomFactor(event));
       }, { passive: false });
 
-      // --- Sync rotation in compare mode (only user-initiated) ---
+      // --- Sync rotation (only user-initiated drag) ---
       let activeDragViewer = null;
 
       const syncCameraTo = (source, target) => {
@@ -1302,44 +1189,35 @@ For training this model, we develop a 3D asset data construction agent based on 
       });
 
       compareOurs.addEventListener('camera-change', (event) => {
-        if (currentMethod !== 'compare') return;
         if (event.detail.source === 'user' && activeDragViewer === compareOurs) {
           syncCameraTo(compareOurs, compareTrellis);
         }
       });
       compareTrellis.addEventListener('camera-change', (event) => {
-        if (currentMethod !== 'compare') return;
         if (event.detail.source === 'user' && activeDragViewer === compareTrellis) {
           syncCameraTo(compareTrellis, compareOurs);
         }
       });
 
       // --- Load events ---
-      viewer.addEventListener('progress', (event) => {
+      compareOurs.addEventListener('progress', (event) => {
         const progress = Math.round(event.detail.totalProgress * 100);
         status.textContent = progress < 100
-          ? `Loading ${currentModel.label}${methodLabel()} · ${progress}%`
-          : `${currentModel.label}${methodLabel()} ready`;
-      });
-
-      viewer.addEventListener('load', () => {
-        if (currentMethod !== 'compare') {
-          initializeZoomRange(viewer);
-          status.textContent = `${currentModel.label}${methodLabel()} ready`;
-        }
-      });
-
-      viewer.addEventListener('error', () => {
-        status.textContent = `${currentModel.label}${methodLabel()} could not be loaded`;
+          ? `Loading ${currentModel.label} · ${progress}%`
+          : `${currentModel.label} ready`;
       });
 
       compareOurs.addEventListener('load', () => {
-        if (currentMethod === 'compare') {
-          initializeZoomRange(compareOurs);
-        }
+        initializeZoomRange(compareOurs);
+        status.textContent = `${currentModel.label} ready`;
       });
+
+      compareOurs.addEventListener('error', () => {
+        status.textContent = `${currentModel.label} could not be loaded`;
+      });
+
       compareTrellis.addEventListener('load', () => {
-        if (currentMethod === 'compare' && typeof compareTrellis.resetTurntableRotation === 'function') {
+        if (typeof compareTrellis.resetTurntableRotation === 'function') {
           compareTrellis.resetTurntableRotation();
         }
       });
