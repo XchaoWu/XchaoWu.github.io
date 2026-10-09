@@ -660,7 +660,6 @@
       --progress-bar-color: var(--green-2);
     }
 
-    .viewer-status,
     .viewer-hint {
       position: absolute;
       z-index: 2;
@@ -673,16 +672,46 @@
       pointer-events: none;
     }
 
-    .viewer-status {
-      top: 16px;
-      left: 16px;
-      padding: 7px 11px;
-    }
-
     .viewer-hint {
       right: 16px;
       bottom: 16px;
       padding: 8px 12px;
+    }
+
+    .cell-loading {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background:
+        radial-gradient(circle at 50% 42%, #ffffff 0, #eef3ef 46%, #dfe8e2 100%);
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.25s ease;
+    }
+
+    .compare-cell.is-loading .cell-loading {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .cell-loading-bar {
+      width: 160px;
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(28, 78, 55, 0.14);
+      overflow: hidden;
+    }
+
+    .cell-loading-fill {
+      display: block;
+      height: 100%;
+      width: 0%;
+      border-radius: 999px;
+      background: var(--green-2);
+      transition: width 0.15s linear;
     }
 
     .compare-stage {
@@ -990,6 +1019,9 @@ For training this model, we develop a 3D asset data construction agent based on 
                 loading="lazy"
                 interaction-prompt="none">
               </model-viewer>
+              <div class="cell-loading" aria-hidden="true">
+                <div class="cell-loading-bar"><span class="cell-loading-fill"></span></div>
+              </div>
             </div>
             <div class="compare-cell">
               <span class="compare-cell-label">TRELLIS.2</span>
@@ -1006,8 +1038,10 @@ For training this model, we develop a 3D asset data construction agent based on 
                 loading="lazy"
                 interaction-prompt="none">
               </model-viewer>
+              <div class="cell-loading" aria-hidden="true">
+                <div class="cell-loading-bar"><span class="cell-loading-fill"></span></div>
+              </div>
             </div>
-            <p class="viewer-status" id="viewer-status" aria-live="polite">Loading Cloth…</p>
             <p class="viewer-hint">Drag to rotate · Right-drag to pan</p>
           </div>
         </div>
@@ -1068,9 +1102,24 @@ For training this model, we develop a 3D asset data construction agent based on 
       const compareOurs = document.querySelector('#compare-ours-viewer');
       const compareTrellis = document.querySelector('#compare-trellis-viewer');
       const inputImage = document.querySelector('#showcase-input-image');
-      const status = document.querySelector('#viewer-status');
       const assetSwitcher = document.querySelector('#asset-switcher');
       const initialCameraOrbit = '0deg 75deg 105%';
+
+      const oursCell = compareOurs.closest('.compare-cell');
+      const trellisCell = compareTrellis.closest('.compare-cell');
+      const oursFill = oursCell.querySelector('.cell-loading-fill');
+      const trellisFill = trellisCell.querySelector('.cell-loading-fill');
+      const setCellLoading = (cell, fill, loading, pct) => {
+        if (loading) {
+          cell.classList.add('is-loading');
+          if (fill) fill.style.width = '0%';
+        } else {
+          cell.classList.remove('is-loading');
+        }
+        if (typeof pct === 'number' && fill) {
+          fill.style.width = Math.max(0, Math.min(100, pct)) + '%';
+        }
+      };
 
       let currentModel = models[0];
       let initialRadiusOurs = null;
@@ -1100,6 +1149,8 @@ For training this model, we develop a 3D asset data construction agent based on 
         initialTargetOurs = null;
         initialTargetTrellis = null;
         zoomScale = 1.0;
+        setCellLoading(oursCell, oursFill, true);
+        setCellLoading(trellisCell, trellisFill, true);
         resetViewer(compareOurs);
         resetViewer(compareTrellis);
         compareOurs.setAttribute('src', model.src);
@@ -1110,7 +1161,6 @@ For training this model, we develop a 3D asset data construction agent based on 
 
       const loadModel = (model) => {
         currentModel = model;
-        status.textContent = `Loading ${model.label}…`;
         inputImage.src = model.image;
         inputImage.alt = `Input image for ${model.label}`;
         [...assetSwitcher.children].forEach((button) => {
@@ -1280,10 +1330,8 @@ For training this model, we develop a 3D asset data construction agent based on 
 
       // ===== Load events =====
       compareOurs.addEventListener('progress', (event) => {
-        const progress = Math.round(event.detail.totalProgress * 100);
-        status.textContent = progress < 100
-          ? `Loading ${currentModel.label} · ${progress}%`
-          : `${currentModel.label} ready`;
+        setCellLoading(oursCell, oursFill, true,
+          Math.round(event.detail.totalProgress * 100));
       });
 
       compareOurs.addEventListener('load', () => {
@@ -1293,11 +1341,16 @@ For training this model, we develop a 3D asset data construction agent based on 
           initialRadiusOurs = compareOurs.getCameraOrbit().radius;
           initialTargetOurs = compareOurs.getCameraTarget();
         });
-        status.textContent = `${currentModel.label} ready`;
+        setCellLoading(oursCell, oursFill, false);
       });
 
       compareOurs.addEventListener('error', () => {
-        status.textContent = `${currentModel.label} could not be loaded`;
+        setCellLoading(oursCell, oursFill, false);
+      });
+
+      compareTrellis.addEventListener('progress', (event) => {
+        setCellLoading(trellisCell, trellisFill, true,
+          Math.round(event.detail.totalProgress * 100));
       });
 
       compareTrellis.addEventListener('load', () => {
@@ -1307,6 +1360,11 @@ For training this model, we develop a 3D asset data construction agent based on 
           initialRadiusTrellis = compareTrellis.getCameraOrbit().radius;
           initialTargetTrellis = compareTrellis.getCameraTarget();
         });
+        setCellLoading(trellisCell, trellisFill, false);
+      });
+
+      compareTrellis.addEventListener('error', () => {
+        setCellLoading(trellisCell, trellisFill, false);
       });
 
       loadModel(currentModel);
