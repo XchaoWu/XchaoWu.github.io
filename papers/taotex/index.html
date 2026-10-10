@@ -885,6 +885,39 @@
       color: var(--muted);
     }
 
+    .albedo-toggle {
+      position: absolute;
+      top: 12px;
+      left: 14px;
+      z-index: 4;
+      padding: 6px 12px;
+      border: 1.5px solid rgba(28, 78, 55, 0.18);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.82);
+      color: #4a5560;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+      pointer-events: auto;
+      backdrop-filter: blur(8px);
+      transition: border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease, background 0.2s ease;
+    }
+
+    .albedo-toggle:hover {
+      border-color: rgba(233, 75, 0, 0.45);
+      color: #e94b00;
+      transform: translateY(-1px);
+    }
+
+    .albedo-toggle[aria-pressed="true"] {
+      border-color: transparent;
+      color: #ffffff;
+      background: linear-gradient(90deg, #ff9a32 0%, #ff6a00 52%, #e94b00 100%);
+      box-shadow: 0 4px 14px rgba(233, 75, 0, 0.28);
+    }
+
     .compare-cell model-viewer {
       display: block;
       width: 100%;
@@ -1203,7 +1236,7 @@ For training this model, we develop a 3D asset data construction agent based on 
         <h2>SOTA performance</h2>
       </div>
 
-      <div class="model-viewer-panel showcase-instance">
+      <div class="model-viewer-panel showcase-instance" data-enable-albedo>
         <div class="showcase-content showcase-hero">
           <figure class="input-image-panel">
             <figcaption class="input-image-label">Object</figcaption>
@@ -1376,6 +1409,9 @@ For training this model, we develop a 3D asset data construction agent based on 
 
       let currentModel = models[0];
       let currentMethodIndex = 0;
+      const enableAlbedo = root.hasAttribute('data-enable-albedo');
+      let albedoMode = false;
+      const albedoButtons = [];
       let initialRadiusOurs = null;
       let initialRadiusTrellis = null;
       let initialTargetOurs = null;   // { x, y, z } — ours' auto-framed center
@@ -1402,6 +1438,76 @@ For training this model, we develop a 3D asset data construction agent based on 
         if (typeof v.resetTurntableRotation === 'function') {
           v.resetTurntableRotation();
         }
+      };
+
+      // ===== Albedo (unlit base-color) view — S2 only =====
+      // model-viewer has no built-in albedo toggle, so we swap each mesh's
+      // material to an unlit passthrough that shows the base color map without
+      // lighting/specular. Works by cloning the material, forcing lit diffuse
+      // to black (color=0) and routing the albedo texture through emissive
+      // (which lights never touch), then clearing env + other shading maps.
+      const getSceneRoot = (viewer) => {
+        const m = viewer.model;
+        if (!m) return null;
+        if (m.gltf && m.gltf.scene) return m.gltf.scene;
+        if (m.scene) return m.scene;
+        return null;
+      };
+
+      const makeUnlit = (orig) => {
+        const albedoTex = orig.map || orig.emissiveMap || null;
+        const u = orig.clone();
+        if (u.emissive && u.color) {
+          u.color.setScalar(0);          // kill lit diffuse
+          u.emissive.setScalar(1);        // emissive = white * emissiveMap
+          u.emissiveMap = albedoTex;      // base color becomes the lit-free output
+          u.emissiveIntensity = 1;
+          u.envMapIntensity = 0;          // drop IBL reflection
+          if ('metalness' in u) u.metalness = 0;
+          if ('roughness' in u) u.roughness = 1;
+          u.map = null;
+          u.normalMap = null;
+          u.bumpMap = null;
+          u.roughnessMap = null;
+          u.metalnessMap = null;
+          u.aoMap = null;
+          if ('clearcoat' in u) u.clearcoat = 0;
+          if ('sheen' in u) u.sheen = 0;
+          if ('transmission' in u) u.transmission = 0;
+          if ('iridescence' in u) u.iridescence = 0;
+        } else if (albedoTex) {
+          u.map = albedoTex;              // already-unlit material (e.g. basic)
+        }
+        u.needsUpdate = true;
+        return u;
+      };
+
+      const applyAlbedoToViewer = (viewer, on) => {
+        const sceneRoot = getSceneRoot(viewer);
+        if (!sceneRoot) return;
+        sceneRoot.traverse((node) => {
+          if (!node.isMesh) return;
+          if (on) {
+            if (node.userData._origMats) return;   // already swapped
+            node.userData._origMats = node.material;
+            node.material = Array.isArray(node.material)
+              ? node.material.map(makeUnlit)
+              : makeUnlit(node.material);
+          } else if (node.userData._origMats) {
+            node.material = node.userData._origMats;
+            node.userData._origMats = undefined;
+          }
+        });
+      };
+
+      const setAlbedo = (on) => {
+        if (!enableAlbedo) return;
+        albedoMode = on;
+        applyAlbedoToViewer(compareOurs, on);
+        applyAlbedoToViewer(compareTrellis, on);
+        albedoButtons.forEach((b) => {
+          b.setAttribute('aria-pressed', String(on));
+        });
       };
 
       const getActiveBaseline = (model) => {
@@ -1494,6 +1600,27 @@ For training this model, we develop a 3D asset data construction agent based on 
           });
           methodSwitcher.append(button);
         });
+      }
+
+      // ===== Albedo toggle buttons (S2 only, one per window, shared state) =====
+      if (enableAlbedo) {
+        const buildAlbedoButton = (cell) => {
+          const btn = document.createElement('button');
+          btn.className = 'albedo-toggle';
+          btn.type = 'button';
+          btn.textContent = 'Albedo';
+          btn.setAttribute('aria-pressed', 'false');
+          btn.setAttribute('aria-label', 'Toggle unlit albedo texture view');
+          btn.addEventListener('pointerdown', (event) => {
+            event.stopPropagation();   // don't begin a viewer drag
+          });
+          btn.addEventListener('click', () => {
+            setAlbedo(!albedoMode);
+          });
+          cell.append(btn);
+          return btn;
+        };
+        albedoButtons.push(buildAlbedoButton(trellisCell), buildAlbedoButton(oursCell));
       }
 
       // ===== Zoom (shared scale, per-viewer absolute radius) =====
@@ -1677,6 +1804,7 @@ For training this model, we develop a 3D asset data construction agent based on 
           initialTargetOurs = compareOurs.getCameraTarget();
         });
         setCellLoading(oursCell, oursFill, false);
+        if (albedoMode) applyAlbedoToViewer(compareOurs, true);
       });
 
       compareOurs.addEventListener('error', () => {
@@ -1699,6 +1827,7 @@ For training this model, we develop a 3D asset data construction agent based on 
           initialTargetTrellis = compareTrellis.getCameraTarget();
         });
         setCellLoading(trellisCell, trellisFill, false);
+        if (albedoMode) applyAlbedoToViewer(compareTrellis, true);
       });
 
       compareTrellis.addEventListener('error', () => {
