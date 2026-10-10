@@ -1480,6 +1480,26 @@ For training this model, we develop a 3D asset data construction agent based on 
         return [...pool];
       };
 
+      const cn = (o) => { try { return Object.getPrototypeOf(o).constructor.name; } catch (e) { return '?'; } };
+      const countMesh = (o) => { let c = 0; try { o.traverse((n) => { if (n.isMesh) c += 1; }); } catch (e) { return -1; } return c; };
+      const albedoDiag = (viewer) => {
+        const p = [];
+        p.push('loaded=' + !!viewer.loaded);
+        const m = viewer.model;
+        p.push('model=' + (m ? cn(m) : 'null'));
+        p.push('keys=' + (m ? Object.keys(m).slice(0, 16).join(',') : '-'));
+        if (m && m.gltf) {
+          p.push('gltfSceneMeshes=' + (m.gltf.scene ? countMesh(m.gltf.scene) : 'no-scene'));
+        } else {
+          p.push('no-gltf');
+        }
+        p.push('getArScene=' + typeof viewer.getArScene);
+        if (typeof viewer.getArScene === 'function') {
+          try { const ar = viewer.getArScene(); p.push('arMeshes=' + (ar ? countMesh(ar) : 'none')); } catch (e) { p.push('arERR'); }
+        }
+        return p.join(' | ');
+      };
+
       const makeUnlit = (orig) => {
         const albedoTex = orig.map || orig.emissiveMap || null;
         const u = orig.clone();
@@ -1556,9 +1576,13 @@ For training this model, we develop a 3D asset data construction agent based on 
         albedoButtons.forEach((b) => {
           b.setAttribute('aria-pressed', String(on));
         });
-        showAlbedoStatus('Albedo ' + (on ? 'ON' : 'OFF') +
-          ' — TaoTex found:' + rOurs.found + '/swap:' + rOurs.changed +
-          ' · Method found:' + rBase.found + '/swap:' + rBase.changed);
+        if (rOurs.found === 0 && rBase.found === 0) {
+          showAlbedoStatus('found 0 — ' + albedoDiag(compareOurs));
+        } else {
+          showAlbedoStatus('Albedo ' + (on ? 'ON' : 'OFF') +
+            ' — TaoTex found:' + rOurs.found + '/swap:' + rOurs.changed +
+            ' · Method found:' + rBase.found + '/swap:' + rBase.changed);
+        }
       };
 
       const getActiveBaseline = (model) => {
