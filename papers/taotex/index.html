@@ -1448,9 +1448,28 @@ For training this model, we develop a 3D asset data construction agent based on 
       // (which lights never touch), then clearing env + other shading maps.
       const getSceneRoot = (viewer) => {
         const m = viewer.model;
-        if (!m) return null;
-        if (m.gltf && m.gltf.scene) return m.gltf.scene;
-        if (m.scene) return m.scene;
+        const candidates = [];
+        if (m) {
+          candidates.push(['model', m]);
+          if (m.gltf && m.gltf.scene) candidates.push(['model.gltf.scene', m.gltf.scene]);
+          if (m.gltf && Array.isArray(m.gltf.scenes)) {
+            m.gltf.scenes.forEach((s, i) => candidates.push([`model.gltf.scenes[${i}]`, s]));
+          }
+          if (m.scene) candidates.push(['model.scene', m.scene]);
+        }
+        if (typeof viewer.getArScene === 'function') {
+          try { const ar = viewer.getArScene(); if (ar) candidates.push(['getArScene()', ar]); } catch (e) { /* ignore */ }
+        }
+        for (const [name, root] of candidates) {
+          if (!root || typeof root.traverse !== 'function') continue;
+          let meshCount = 0;
+          root.traverse((node) => { if (node.isMesh) meshCount += 1; });
+          if (meshCount > 0) {
+            console.log('[albedo] scene root via', name, '-> meshes:', meshCount);
+            return root;
+          }
+        }
+        console.warn('[albedo] no mesh-bearing scene root found; has viewer.model?', !!m);
         return null;
       };
 
@@ -1485,6 +1504,7 @@ For training this model, we develop a 3D asset data construction agent based on 
       const applyAlbedoToViewer = (viewer, on) => {
         const sceneRoot = getSceneRoot(viewer);
         if (!sceneRoot) return;
+        let changed = 0;
         sceneRoot.traverse((node) => {
           if (!node.isMesh) return;
           if (on) {
@@ -1493,15 +1513,22 @@ For training this model, we develop a 3D asset data construction agent based on 
             node.material = Array.isArray(node.material)
               ? node.material.map(makeUnlit)
               : makeUnlit(node.material);
+            changed += 1;
           } else if (node.userData._origMats) {
             node.material = node.userData._origMats;
             node.userData._origMats = undefined;
+            changed += 1;
           }
         });
+        console.log('[albedo] ' + (on ? 'unlit' : 'lit') + ' swapped meshes:', changed);
+        // Force a redraw — model-viewer may render on demand and miss the swap.
+        if (typeof viewer.requestUpdate === 'function') viewer.requestUpdate();
+        if (typeof viewer.jumpCameraToGoal === 'function') viewer.jumpCameraToGoal();
       };
 
       const setAlbedo = (on) => {
         if (!enableAlbedo) return;
+        console.log('[albedo] setAlbedo ->', on);
         albedoMode = on;
         applyAlbedoToViewer(compareOurs, on);
         applyAlbedoToViewer(compareTrellis, on);
