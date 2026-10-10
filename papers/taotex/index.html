@@ -769,18 +769,31 @@
     .compare-cell-label {
       position: absolute;
       top: 12px;
-      left: 50%;
-      transform: translateX(-50%);
+      right: 14px;
+      left: auto;
+      transform: none;
       z-index: 3;
-      padding: 5px 14px;
-      border-radius: 999px;
-      color: #ffffff;
-      background: var(--green);
-      font-size: 12px;
+      padding: 0;
+      border-radius: 0;
+      color: var(--muted);
+      background: none;
+      font-size: 13px;
       font-weight: 800;
-      letter-spacing: 0.04em;
+      letter-spacing: 0.02em;
       pointer-events: none;
       white-space: nowrap;
+    }
+
+    .compare-cell-label.compare-ours-label {
+      background: linear-gradient(90deg, #ff9a32 0%, #ff6a00 52%, #e94b00 100%);
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      color: transparent;
+    }
+
+    .compare-cell-label.compare-baseline-label {
+      color: var(--muted);
     }
 
     .compare-cell model-viewer {
@@ -939,7 +952,6 @@
 
       .compare-cell-label {
         font-size: 11px;
-        padding: 4px 10px;
       }
 
     }
@@ -1056,7 +1068,7 @@ For training this model, we develop a 3D asset data construction agent based on 
           </div>
 
           <div class="compare-cell">
-            <span class="compare-cell-label">Ours (TaoTex)</span>
+            <span class="compare-cell-label compare-ours-label">TaoTex</span>
             <model-viewer class="compare-ours-viewer"
               alt="TaoTex result"
               camera-controls
@@ -1102,7 +1114,7 @@ For training this model, we develop a 3D asset data construction agent based on 
 
           <div class="compare-stage">
             <div class="compare-cell">
-              <span class="compare-cell-label">Ours (TaoTex)</span>
+              <span class="compare-cell-label compare-ours-label">TaoTex</span>
               <model-viewer class="compare-ours-viewer"
                 alt="TaoTex result"
                 camera-controls
