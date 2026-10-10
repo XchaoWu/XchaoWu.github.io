@@ -761,6 +761,11 @@
       object-fit: contain;
     }
 
+    .showcase-content.showcase-hero .asset-switcher {
+      justify-content: center;
+      margin-bottom: 14px;
+    }
+
     .compare-cell-label {
       position: absolute;
       top: 12px;
@@ -1021,16 +1026,10 @@ For training this model, we develop a 3D asset data construction agent based on 
       </div>
 
       <div class="model-viewer-panel showcase-instance">
-        <div class="model-toolbar">
-          <div class="model-control-group">
-            <span class="model-control-label">Object</span>
-            <div class="asset-switcher" role="group" aria-label="Select 3D object"></div>
-          </div>
-        </div>
-
         <div class="showcase-content showcase-hero">
           <figure class="input-image-panel">
             <figcaption class="input-image-label">Input Image</figcaption>
+            <div class="asset-switcher" role="group" aria-label="Select 3D object"></div>
             <div class="input-image-frame">
               <img class="showcase-input-image" src="showcase/cloth.png" alt="Input image for Cloth">
             </div>
