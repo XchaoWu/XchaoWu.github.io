@@ -1470,13 +1470,40 @@ For training this model, we develop a 3D asset data construction agent based on 
         return meshes;
       };
 
-      // Gather meshes from every plausible entry point on a viewer.
+      // model-viewer hides its three scene behind several accessors; try them all.
+      const sceneCandidateRoots = (viewer) => {
+        const m = viewer.model;
+        const defs = [
+          ['viewer.scene', () => viewer.scene],
+          ['viewer.getArScene()', () => typeof viewer.getArScene === 'function' ? viewer.getArScene() : null],
+          ['viewer.model', () => m],
+          ['viewer.model.scene', () => m && m.scene],
+          ['viewer.model.gltf.scene', () => m && m.gltf && m.gltf.scene],
+          ['viewer.model.gltf.scenes[0]', () => m && m.gltf && m.gltf.scenes && m.gltf.scenes[0]],
+          ['viewer.model.correlatedSceneGraph.scene', () => m && m.correlatedSceneGraph && m.correlatedSceneGraph.scene],
+          ['viewer.gltf.scene', () => viewer.gltf && viewer.gltf.scene],
+          ['viewer.currentGLTF().scene', () => typeof viewer.currentGLTF === 'function' && viewer.currentGLTF().scene],
+          ['viewer.threeGLTF.scene', () => viewer.threeGLTF && viewer.threeGLTF.scene],
+          ['viewer.threeGLTF.scenes[0]', () => viewer.threeGLTF && viewer.threeGLTF.scenes && viewer.threeGLTF.scenes[0]],
+        ];
+        const out = [];
+        for (const [label, fn] of defs) {
+          try {
+            const r = fn();
+            if (r && typeof r === 'object' && (r.isMesh || Array.isArray(r.children) || typeof r.traverse === 'function')) {
+              out.push({ label, root: r });
+            }
+          } catch (e) { /* ignore */ }
+        }
+        return out;
+      };
+
+      // Gather meshes from every plausible entry point on a viewer (union, deduped).
       const getViewerMeshes = (viewer) => {
         const pool = new Set();
-        const starts = [];
-        if (viewer.model) starts.push(viewer.model);
-        if (viewer.getArScene) { try { const ar = viewer.getArScene(); if (ar) starts.push(ar); } catch (e) { /* ignore */ } }
-        for (const s of starts) collectMeshes(s).forEach((mesh) => pool.add(mesh));
+        for (const { root } of sceneCandidateRoots(viewer)) {
+          collectMeshes(root).forEach((mesh) => pool.add(mesh));
+        }
         return [...pool];
       };
 
@@ -1496,32 +1523,15 @@ For training this model, we develop a 3D asset data construction agent based on 
       const albedoDiag = (viewer) => {
         const p = [];
         const m = viewer.model;
+        const reScene = /scene|gltf|model|correlated|three|instance|mesh|node|root/i;
+        const elNames = protoNames(viewer).filter((n) => reScene.test(n)).slice(0, 12);
+        const modelNames = m ? protoNames(m).filter((n) => reScene.test(n)).slice(0, 12) : [];
         p.push('model=' + (m ? cn(m) : 'null'));
-        if (!m) return p.join(' | ');
-        const hints = protoNames(m).filter((n) => /scene|model|gltf|child|root|mesh|object|instance|node|current/i.test(n)).slice(0, 12);
-        p.push('mp=[' + hints.join(',') + ']');
-        p.push('own=[' + Object.keys(m).slice(0, 10).join(',') + ']');
-        p.push('traverseMeshes=' + (typeof m.traverse === 'function' ? countMesh(m) : 'noTraverse'));
-        p.push('children=' + (Array.isArray(m.children) ? m.children.length : '-'));
-        // BFS to discover the access path to meshes
-        const queue = [{ node: m, path: 'model' }];
-        const seen = new Set([m]);
-        const accessors = protoNames(m);
-        let firstPath = null; let meshTotal = 0; let scanned = 0;
-        while (queue.length && scanned++ < 3000) {
-          const { node, path } = queue.shift();
-          if (node.isMesh) { meshTotal++; if (!firstPath) firstPath = path; continue; }
-          if (node.material && node.geometry) { meshTotal++; if (!firstPath) firstPath = path; }
-          const nexts = new Set();
-          Object.keys(node).forEach((k) => nexts.add(k));
-          if (path === 'model') accessors.forEach((k) => nexts.add(k));
-          for (const k of nexts) {
-            let val; try { val = node[k]; } catch (e) { continue; }
-            if (Array.isArray(val)) { val.forEach((v) => { if (isNodeish(v) && !seen.has(v)) { seen.add(v); queue.push({ node: v, path: path + '.' + k }); } }); }
-            else if (isNodeish(val) && !seen.has(val)) { seen.add(val); queue.push({ node: val, path: path + '.' + k }); }
-          }
-        }
-        p.push('meshPath=' + (firstPath || 'NONE') + '(#' + meshTotal + ')');
+        p.push('el=[' + elNames.join(',') + ']');
+        p.push('mp=[' + modelNames.join(',') + ']');
+        const cands = sceneCandidateRoots(viewer);
+        p.push('cands=[' + cands.map((c) => c.label + ':' + countMesh(c.root)).join(', ') + ']');
+        p.push('TOTAL=' + getViewerMeshes(viewer).length);
         return p.join(' | ');
       };
 
