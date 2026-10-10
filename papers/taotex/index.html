@@ -740,10 +740,14 @@
       border-right: 1px solid rgba(28, 78, 55, 0.12);
     }
 
-    /* First showcase hero: Ours 40% | Input 20% | Baseline 40% */
+    /* First showcase hero: Input 20% | Baseline 40% | Ours 40% */
     .showcase-content.showcase-hero {
       position: relative;
-      grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 2fr);
+      grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) minmax(0, 2fr);
+    }
+
+    .showcase-content.showcase-hero .compare-cell + .compare-cell {
+      border-left: 1px solid rgba(28, 78, 55, 0.12);
     }
 
     .showcase-content.showcase-hero .input-image-panel {
@@ -1022,10 +1026,17 @@ For training this model, we develop a 3D asset data construction agent based on 
         </div>
 
         <div class="showcase-content showcase-hero">
+          <figure class="input-image-panel">
+            <figcaption class="input-image-label">Input Image</figcaption>
+            <div class="input-image-frame">
+              <img class="showcase-input-image" src="showcase/cloth.png" alt="Input image for Cloth">
+            </div>
+          </figure>
+
           <div class="compare-cell">
-            <span class="compare-cell-label">Ours (TaoTex)</span>
-            <model-viewer class="compare-ours-viewer"
-              alt="TaoTex result"
+            <span class="compare-cell-label compare-baseline-label">TRELLIS.2</span>
+            <model-viewer class="compare-trellis-viewer"
+              alt="Baseline result"
               camera-controls
               camera-orbit="0deg 75deg 105%"
               disable-zoom
@@ -1042,17 +1053,10 @@ For training this model, we develop a 3D asset data construction agent based on 
             </div>
           </div>
 
-          <figure class="input-image-panel">
-            <figcaption class="input-image-label">Input Image</figcaption>
-            <div class="input-image-frame">
-              <img class="showcase-input-image" src="showcase/cloth.png" alt="Input image for Cloth">
-            </div>
-          </figure>
-
           <div class="compare-cell">
-            <span class="compare-cell-label compare-baseline-label">TRELLIS.2</span>
-            <model-viewer class="compare-trellis-viewer"
-              alt="Baseline result"
+            <span class="compare-cell-label">Ours (TaoTex)</span>
+            <model-viewer class="compare-ours-viewer"
+              alt="TaoTex result"
               camera-controls
               camera-orbit="0deg 75deg 105%"
               disable-zoom
@@ -1359,13 +1363,12 @@ For training this model, we develop a 3D asset data construction agent based on 
         prevSourceOrbit.set(v, { theta: o.theta, phi: o.phi });
       };
 
-      const cells = root.querySelectorAll('.compare-cell');
-      cells[0].addEventListener('pointerdown', () => {
+      oursCell.addEventListener('pointerdown', () => {
         userDragging = 'ours';
         autoRotateActive = false;
         seedOrbit(compareOurs);
       });
-      cells[1].addEventListener('pointerdown', () => {
+      trellisCell.addEventListener('pointerdown', () => {
         userDragging = 'trellis';
         autoRotateActive = false;
         seedOrbit(compareTrellis);
