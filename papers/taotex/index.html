@@ -686,32 +686,48 @@
       padding: 8px 12px;
     }
 
-    .arcball {
+    .drag-hint {
       position: absolute;
       top: 50%;
       left: 50%;
-      width: 104px;
-      height: 104px;
       transform: translate(-50%, -50%);
       z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
       pointer-events: none;
-      opacity: 0.9;
+      opacity: 0.92;
       transition: opacity 0.4s ease, visibility 0.4s ease;
       visibility: visible;
     }
 
-    .arcball.is-hidden {
+    .drag-hint.is-hidden {
       opacity: 0;
       visibility: hidden;
     }
 
-    .arcball .arcball-ring {
-      transform-origin: 50% 50%;
-      animation: arcball-spin 9s linear infinite;
+    .drag-hint svg {
+      width: 56px;
+      height: 56px;
+      color: rgba(23, 35, 29, 0.72);
+      animation: drag-sway 1.8s ease-in-out infinite;
     }
 
-    @keyframes arcball-spin {
-      to { transform: rotate(360deg); }
+    .drag-hint-caption {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      color: rgba(23, 35, 29, 0.72);
+      background: rgba(255, 255, 255, 0.7);
+      padding: 3px 10px;
+      border-radius: 999px;
+      backdrop-filter: blur(6px);
+    }
+
+    @keyframes drag-sway {
+      0%, 100% { transform: translateX(-6px); }
+      50%      { transform: translateX(6px); }
     }
 
     .cell-loading {
@@ -1091,17 +1107,9 @@ For training this model, we develop a 3D asset data construction agent based on 
               loading="lazy"
               interaction-prompt="none">
             </model-viewer>
-            <div class="arcball" aria-hidden="true">
-              <svg viewBox="0 0 100 100" width="100%" height="100%">
-                <g class="arcball-ring" fill="none" stroke="rgba(23,35,29,0.55)" stroke-width="2.5">
-                  <circle cx="50" cy="50" r="36" stroke-dasharray="2 8" stroke-linecap="round"/>
-                  <path d="M78 38 A42 42 0 0 1 86 60" stroke="rgba(23,35,29,0.7)"/>
-                  <path d="M86 60 l-7 -3 m7 3 l1 -7" stroke="rgba(23,35,29,0.7)" stroke-linecap="round"/>
-                  <path d="M22 62 A42 42 0 0 1 14 40" stroke="rgba(23,35,29,0.7)"/>
-                  <path d="M14 40 l7 3 m-7 -3 l-1 7" stroke="rgba(23,35,29,0.7)" stroke-linecap="round"/>
-                </g>
-                <circle cx="50" cy="50" r="15" fill="rgba(255,255,255,0.5)" stroke="rgba(23,35,29,0.5)" stroke-width="2"/>
-              </svg>
+            <div class="drag-hint" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M18 11V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2"/><path d="M14 10V4a2 2 0 0 0-2-2a2 2 0 0 0-2 2v2"/><path d="M10 10.5V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg>
+              <span class="drag-hint-caption">Drag to rotate</span>
             </div>
             <div class="cell-loading" aria-hidden="true">
               <div class="cell-loading-bar"><span class="cell-loading-fill"></span></div>
@@ -1123,17 +1131,9 @@ For training this model, we develop a 3D asset data construction agent based on 
               loading="lazy"
               interaction-prompt="none">
             </model-viewer>
-            <div class="arcball" aria-hidden="true">
-              <svg viewBox="0 0 100 100" width="100%" height="100%">
-                <g class="arcball-ring" fill="none" stroke="rgba(23,35,29,0.55)" stroke-width="2.5">
-                  <circle cx="50" cy="50" r="36" stroke-dasharray="2 8" stroke-linecap="round"/>
-                  <path d="M78 38 A42 42 0 0 1 86 60" stroke="rgba(23,35,29,0.7)"/>
-                  <path d="M86 60 l-7 -3 m7 3 l1 -7" stroke="rgba(23,35,29,0.7)" stroke-linecap="round"/>
-                  <path d="M22 62 A42 42 0 0 1 14 40" stroke="rgba(23,35,29,0.7)"/>
-                  <path d="M14 40 l7 3 m-7 -3 l-1 7" stroke="rgba(23,35,29,0.7)" stroke-linecap="round"/>
-                </g>
-                <circle cx="50" cy="50" r="15" fill="rgba(255,255,255,0.5)" stroke="rgba(23,35,29,0.5)" stroke-width="2"/>
-              </svg>
+            <div class="drag-hint" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M18 11V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2"/><path d="M14 10V4a2 2 0 0 0-2-2a2 2 0 0 0-2 2v2"/><path d="M10 10.5V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg>
+              <span class="drag-hint-caption">Drag to rotate</span>
             </div>
             <div class="cell-loading" aria-hidden="true">
               <div class="cell-loading-bar"><span class="cell-loading-fill"></span></div>
@@ -1181,17 +1181,9 @@ For training this model, we develop a 3D asset data construction agent based on 
                 loading="lazy"
                 interaction-prompt="none">
               </model-viewer>
-              <div class="arcball" aria-hidden="true">
-                <svg viewBox="0 0 100 100" width="100%" height="100%">
-                  <g class="arcball-ring" fill="none" stroke="rgba(23,35,29,0.55)" stroke-width="2.5">
-                    <circle cx="50" cy="50" r="36" stroke-dasharray="2 8" stroke-linecap="round"/>
-                    <path d="M78 38 A42 42 0 0 1 86 60" stroke="rgba(23,35,29,0.7)"/>
-                    <path d="M86 60 l-7 -3 m7 3 l1 -7" stroke="rgba(23,35,29,0.7)" stroke-linecap="round"/>
-                    <path d="M22 62 A42 42 0 0 1 14 40" stroke="rgba(23,35,29,0.7)"/>
-                    <path d="M14 40 l7 3 m-7 -3 l-1 7" stroke="rgba(23,35,29,0.7)" stroke-linecap="round"/>
-                  </g>
-                  <circle cx="50" cy="50" r="15" fill="rgba(255,255,255,0.5)" stroke="rgba(23,35,29,0.5)" stroke-width="2"/>
-                </svg>
+              <div class="drag-hint" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M18 11V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2"/><path d="M14 10V4a2 2 0 0 0-2-2a2 2 0 0 0-2 2v2"/><path d="M10 10.5V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg>
+                <span class="drag-hint-caption">Drag to rotate</span>
               </div>
               <div class="cell-loading" aria-hidden="true">
                 <div class="cell-loading-bar"><span class="cell-loading-fill"></span></div>
@@ -1212,17 +1204,9 @@ For training this model, we develop a 3D asset data construction agent based on 
                 loading="lazy"
                 interaction-prompt="none">
               </model-viewer>
-              <div class="arcball" aria-hidden="true">
-                <svg viewBox="0 0 100 100" width="100%" height="100%">
-                  <g class="arcball-ring" fill="none" stroke="rgba(23,35,29,0.55)" stroke-width="2.5">
-                    <circle cx="50" cy="50" r="36" stroke-dasharray="2 8" stroke-linecap="round"/>
-                    <path d="M78 38 A42 42 0 0 1 86 60" stroke="rgba(23,35,29,0.7)"/>
-                    <path d="M86 60 l-7 -3 m7 3 l1 -7" stroke="rgba(23,35,29,0.7)" stroke-linecap="round"/>
-                    <path d="M22 62 A42 42 0 0 1 14 40" stroke="rgba(23,35,29,0.7)"/>
-                    <path d="M14 40 l7 3 m-7 -3 l-1 7" stroke="rgba(23,35,29,0.7)" stroke-linecap="round"/>
-                  </g>
-                  <circle cx="50" cy="50" r="15" fill="rgba(255,255,255,0.5)" stroke="rgba(23,35,29,0.5)" stroke-width="2"/>
-                </svg>
+              <div class="drag-hint" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M18 11V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2"/><path d="M14 10V4a2 2 0 0 0-2-2a2 2 0 0 0-2 2v2"/><path d="M10 10.5V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg>
+                <span class="drag-hint-caption">Drag to rotate</span>
               </div>
               <div class="cell-loading" aria-hidden="true">
                 <div class="cell-loading-bar"><span class="cell-loading-fill"></span></div>
@@ -1311,8 +1295,8 @@ For training this model, we develop a 3D asset data construction agent based on 
       const trellisCell = compareTrellis.closest('.compare-cell');
       const oursFill = oursCell.querySelector('.cell-loading-fill');
       const trellisFill = trellisCell.querySelector('.cell-loading-fill');
-      const oursArcball = oursCell.querySelector('.arcball');
-      const trellisArcball = trellisCell.querySelector('.arcball');
+      const oursDragHint = oursCell.querySelector('.drag-hint');
+      const trellisDragHint = trellisCell.querySelector('.drag-hint');
       const setCellLoading = (cell, fill, loading, pct) => {
         if (loading) {
           cell.classList.add('is-loading');
@@ -1369,8 +1353,8 @@ For training this model, we develop a 3D asset data construction agent based on 
         trellisLoaded = false;
         setCellLoading(oursCell, oursFill, true);
         setCellLoading(trellisCell, trellisFill, true);
-        if (oursArcball) oursArcball.classList.remove('is-hidden');
-        if (trellisArcball) trellisArcball.classList.remove('is-hidden');
+        if (oursDragHint) oursDragHint.classList.remove('is-hidden');
+        if (trellisDragHint) trellisDragHint.classList.remove('is-hidden');
         const base = model.baseline || { name: 'TRELLIS.2', src: model.trellis2Src };
         baseYawDeg = (typeof base.yawDeg === 'number') ? base.yawDeg : 0;
         baseYawRad = baseYawDeg * Math.PI / 180;
@@ -1461,15 +1445,15 @@ For training this model, we develop a 3D asset data construction agent based on 
       oursCell.addEventListener('pointerdown', () => {
         userDragging = 'ours';
         autoRotateActive = false;
-        if (oursArcball) oursArcball.classList.add('is-hidden');
-        if (trellisArcball) trellisArcball.classList.add('is-hidden');
+        if (oursDragHint) oursDragHint.classList.add('is-hidden');
+        if (trellisDragHint) trellisDragHint.classList.add('is-hidden');
         seedOrbit(compareOurs);
       });
       trellisCell.addEventListener('pointerdown', () => {
         userDragging = 'trellis';
         autoRotateActive = false;
-        if (oursArcball) oursArcball.classList.add('is-hidden');
-        if (trellisArcball) trellisArcball.classList.add('is-hidden');
+        if (oursDragHint) oursDragHint.classList.add('is-hidden');
+        if (trellisDragHint) trellisDragHint.classList.add('is-hidden');
         seedOrbit(compareTrellis);
       });
       window.addEventListener('pointerup', () => {
