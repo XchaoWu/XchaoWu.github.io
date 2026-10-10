@@ -527,6 +527,79 @@
       margin-inline: auto;
     }
 
+    #comparisons .comparison-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      align-items: center;
+    }
+
+    #comparisons .compare-figure {
+      margin: 0;
+      cursor: zoom-in;
+    }
+
+    #comparisons .compare-figure img {
+      display: block;
+      width: 100%;
+      height: auto;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      object-fit: contain;
+    }
+
+    #comparisons .compare-figure:focus-visible {
+      outline: 2px solid var(--green-2, #1c4e37);
+      outline-offset: 3px;
+    }
+
+    .lightbox {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 4vh 4vw;
+      background: rgba(8, 12, 10, 0.88);
+      z-index: 9999;
+    }
+
+    .lightbox.is-open {
+      display: flex;
+    }
+
+    .lightbox img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      cursor: zoom-out;
+      box-shadow: 0 18px 60px rgba(0, 0, 0, 0.5);
+      background: #fff;
+    }
+
+    .lightbox-close {
+      position: absolute;
+      top: 18px;
+      right: 22px;
+      width: 42px;
+      height: 42px;
+      border: 0;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.16);
+      color: #fff;
+      font-size: 24px;
+      line-height: 1;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .lightbox-close:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
     .model-gallery-heading {
       display: flex;
       align-items: end;
@@ -689,6 +762,21 @@
       width: 100%;
       max-height: 500px;
       object-fit: contain;
+    }
+
+    .input-image-frame[data-lightbox] {
+      cursor: zoom-in;
+      border-radius: 10px;
+      transition: box-shadow 0.2s ease, transform 0.2s ease;
+    }
+
+    .input-image-frame[data-lightbox]:hover {
+      box-shadow: 0 8px 24px rgba(15, 23, 19, 0.12);
+    }
+
+    .input-image-frame[data-lightbox]:focus-visible {
+      outline: 2px solid var(--green-2, #1c4e37);
+      outline-offset: 3px;
     }
 
     .viewer-stage {
@@ -885,39 +973,6 @@
       color: var(--muted);
     }
 
-    .albedo-toggle {
-      position: absolute;
-      top: 12px;
-      left: 14px;
-      z-index: 4;
-      padding: 6px 12px;
-      border: 1.5px solid rgba(28, 78, 55, 0.18);
-      border-radius: 999px;
-      background: rgba(255, 255, 255, 0.82);
-      color: #4a5560;
-      font-size: 13px;
-      font-weight: 700;
-      line-height: 1;
-      letter-spacing: 0.02em;
-      cursor: pointer;
-      pointer-events: auto;
-      backdrop-filter: blur(8px);
-      transition: border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease, background 0.2s ease;
-    }
-
-    .albedo-toggle:hover {
-      border-color: rgba(233, 75, 0, 0.45);
-      color: #e94b00;
-      transform: translateY(-1px);
-    }
-
-    .albedo-toggle[aria-pressed="true"] {
-      border-color: transparent;
-      color: #ffffff;
-      background: linear-gradient(90deg, #ff9a32 0%, #ff6a00 52%, #e94b00 100%);
-      box-shadow: 0 4px 14px rgba(233, 75, 0, 0.28);
-    }
-
     .compare-cell model-viewer {
       display: block;
       width: 100%;
@@ -1003,6 +1058,11 @@
       .section-heading {
         grid-template-columns: 1fr;
         gap: 16px;
+      }
+
+      #comparisons .comparison-row {
+        grid-template-columns: 1fr;
+        gap: 14px;
       }
 
       .section-copy {
@@ -1174,7 +1234,7 @@ For training this model, we develop a 3D asset data construction agent based on 
             <figcaption class="input-image-label">Object</figcaption>
             <div class="asset-switcher" role="group" aria-label="Select 3D object"></div>
             <span class="input-image-label">Input Image</span>
-            <div class="input-image-frame">
+            <div class="input-image-frame" data-lightbox role="button" tabindex="0" aria-label="Enlarge input image">
               <img class="showcase-input-image" src="showcase/cloth.png" alt="Input image for Cloth">
             </div>
           </figure>
@@ -1234,15 +1294,16 @@ For training this model, we develop a 3D asset data construction agent based on 
     <section class="section" id="interactive-3d-2">
       <div class="model-gallery-heading">
         <h2>SOTA performance</h2>
+        <p>Pay close attention to the texture-to-image alignment across different viewpoints.</p>
       </div>
 
-      <div class="model-viewer-panel showcase-instance" data-enable-albedo>
+      <div class="model-viewer-panel showcase-instance">
         <div class="showcase-content showcase-hero">
           <figure class="input-image-panel">
             <figcaption class="input-image-label">Object</figcaption>
             <div class="asset-switcher" role="group" aria-label="Select 3D object"></div>
             <span class="input-image-label">Input Image</span>
-            <div class="input-image-frame">
+            <div class="input-image-frame" data-lightbox role="button" tabindex="0" aria-label="Enlarge input image">
               <img class="showcase-input-image" src="showcase/red.png" alt="Input image for Red">
             </div>
           </figure>
@@ -1301,24 +1362,17 @@ For training this model, we develop a 3D asset data construction agent based on 
     </section>
 
     <section class="section" id="comparisons">
-      <div class="section-heading">
-        <h2>Comparisons</h2>
+      <div class="model-gallery-heading">
+        <h2>More Comparisons</h2>
         <!-- <p class="section-copy">?? Add the final qualitative comparisons and detail-fidelity discussion here.</p> -->
       </div>
-      <div class="section-card">
-        <object data="images/comparisons.png" type="image/png">
-          <div class="asset-fallback">
-            Comparisons figure placeholder
-            <code>images/comparisons.png</code>
-          </div>
-        </object>
-        <br>
-        <object data="images/comparisons2.png" type="image/png">
-          <div class="asset-fallback">
-            Comparisons figure placeholder
-            <code>images/comparisons.png</code>
-          </div>
-        </object>
+      <div class="section-card comparison-row">
+        <figure class="compare-figure" data-lightbox="images/comparisons.png" role="button" tabindex="0" aria-label="Enlarge comparison figure 1">
+          <img src="images/comparisons.png" alt="Qualitative comparison (left)" loading="lazy">
+        </figure>
+        <figure class="compare-figure" data-lightbox="images/comparisons2.png" role="button" tabindex="0" aria-label="Enlarge comparison figure 2">
+          <img src="images/comparisons2.png" alt="Qualitative comparison (right)" loading="lazy">
+        </figure>
       </div>
     </section>
 
@@ -1352,20 +1406,26 @@ For training this model, we develop a 3D asset data construction agent based on 
       //   baseline.yawDeg -> optional heading fix; rotates ONLY the right viewer
       //                        if the baseline GLB faces a different direction.
       // Dial a heading live with `tuneBaseYaw(deg, showcaseIndex)` then paste it.
+      //   baseZoom        -> per-object DEFAULT camera distance (near/far).
+      //                        1 = auto-frame (unchanged). <1 zooms IN (object looks
+      //                        bigger), >1 zooms OUT (smaller). Objects vary in size,
+      //                        so tune each independently. Applies to both windows;
+      //                        put it on a baseline/method to override just the right
+      //                        viewer. Tweak live with tuneBaseZoom(factor, idx) then paste.
       const groups = [
         [ // Showcase 1 — vs TRELLIS.2
-          { id: 'cloth',  label: 'Cloth',  src: 'showcase/cloth.glb',  image: 'showcase/cloth.png',  baseline: { name: 'TRELLIS.2',      src: 'showcase/cloth_trellis2.glb',  yawDeg: 0 } },
-          { id: 'bag',    label: 'Bag',    src: 'showcase/bag.glb',    image: 'showcase/bag.png',    baseline: { name: 'TRELLIS.2',      src: 'showcase/bag_trellis2.glb',    yawDeg: 0 } },
-          { id: 'shield', label: 'Shield', src: 'showcase/shield.glb', image: 'showcase/shield.png', baseline: { name: 'TRELLIS.2',      src: 'showcase/shield_trellis2.glb', yawDeg: 0 } },
+          { id: 'cloth',  label: 'Cloth',  src: 'showcase/cloth.glb',  image: 'showcase/cloth.png',  baseZoom: 0.8,  baseline: { name: 'TRELLIS.2',      src: 'showcase/cloth_trellis2.glb',  yawDeg: 0 } },
+          { id: 'bag',    label: 'Bag',    src: 'showcase/bag.glb',    image: 'showcase/bag.png',    baseZoom: 1.0,  baseline: { name: 'TRELLIS.2',      src: 'showcase/bag_trellis2.glb',    yawDeg: 0 } },
+          { id: 'shield', label: 'Shield', src: 'showcase/shield.glb', image: 'showcase/shield.png', baseZoom: 1, baseline: { name: 'TRELLIS.2',      src: 'showcase/shield_trellis2.glb', yawDeg: 0 } },
         ],
         [ // Showcase 2 — TaoTex vs switchable SOTA baselines
-          { id: 'red',    label: 'Red',    src: 'showcase/red.glb',    image: 'showcase/red.png',
+          { id: 'red',    label: 'Red',    src: 'showcase/red.glb',    image: 'showcase/red.png',    baseZoom: 1,
             methods: [
               { name: 'Tripo v3.1',   src: 'showcase/red_tripo.glb',  yawDeg: 0 },
               { name: 'Hunyuan v3.1', src: 'showcase/red_hy.glb',     yawDeg: 0 },
               { name: 'Rodin gen2.5', src: 'showcase/red_rodin.glb',  yawDeg: 0 },
             ] },
-          { id: 'teapot', label: 'Teapot', src: 'showcase/teapot.glb', image: 'showcase/teapot.png',
+          { id: 'teapot', label: 'Teapot', src: 'showcase/teapot.glb', image: 'showcase/teapot.png', baseZoom: 0.7,
             methods: [
               { name: 'Tripo v3.1',   src: 'showcase/teapot_tripo.glb',  yawDeg: 0 },
               { name: 'Hunyuan v3.1', src: 'showcase/teapot_hy.glb',     yawDeg: 0 },
@@ -1409,9 +1469,6 @@ For training this model, we develop a 3D asset data construction agent based on 
 
       let currentModel = models[0];
       let currentMethodIndex = 0;
-      const enableAlbedo = root.hasAttribute('data-enable-albedo');
-      let albedoMode = false;
-      const albedoButtons = [];
       let initialRadiusOurs = null;
       let initialRadiusTrellis = null;
       let initialTargetOurs = null;   // { x, y, z } — ours' auto-framed center
@@ -1432,192 +1489,41 @@ For training this model, we develop a 3D asset data construction agent based on 
       let baseYawDeg = 0;
       let baseYawRad = 0;
 
-      const resetViewer = (v, yawDeg = 0) => {
-        v.setAttribute('camera-orbit', `${yawDeg}deg 75deg 105%`);
+      // Per-object default camera distance. model-viewer auto-frames each GLB to a
+      // neutral 105% radius; we then scale that auto-frame distance by `baseZoom`
+      // in meters, so <1 sits closer (object looks bigger), >1 sits farther. Doing
+      // it in meters (not via the camera-orbit % attribute) is deterministic and
+      // survives model-viewer's own post-load re-frame.
+      const BASE_RADIUS_PCT = 105;
+      const sanitizeZoom = (z) => (typeof z === 'number' && z > 0) ? z : 1;
+      // Auto-frame radius captured right after each model loads (neutral framing).
+      let autoRadiusOurs = null;
+      let autoRadiusTrellis = null;
+      // The baseZoom currently in effect per viewer (object-level, or method-level
+      // override for the baseline window). Wheel zoom multiplies on top of this.
+      let oursBaseZoom = 1;
+      let trellisBaseZoom = 1;
+
+      const resetViewer = (v, yawDeg = 0, radiusPct = BASE_RADIUS_PCT) => {
+        v.setAttribute('camera-orbit', `${yawDeg}deg 75deg ${radiusPct}%`);
         v.setAttribute('camera-target', 'auto auto auto');
         if (typeof v.resetTurntableRotation === 'function') {
           v.resetTurntableRotation();
         }
       };
 
-      // ===== Albedo (unlit base-color) view — S2 only =====
-      // model-viewer has no built-in albedo toggle, so we swap each mesh's
-      // material to an unlit passthrough that shows the base color map without
-      // lighting/specular. Works by cloning the material, forcing lit diffuse
-      // to black (color=0) and routing the albedo texture through emissive
-      // (which lights never touch), then clearing env + other shading maps.
-      const collectMeshes = (root) => {
-        const meshes = [];
-        const seen = new Set();
-        const containerKeys = ['scene', 'model', 'gltf', '_model', '_currentModel', 'root', 'scenes', 'instances', 'parent'];
-        let steps = 0;
-        const looksLikeNode = (o) => !!o && typeof o === 'object' &&
-          (o.isMesh || Array.isArray(o.children) || typeof o.traverse === 'function' ||
-           (o.material && o.geometry) || o.scene || o.gltf);
-        const walk = (o) => {
-          if (!o || typeof o !== 'object' || seen.has(o) || steps++ > 20000) return;
-          seen.add(o);
-          if (o.isMesh || (o.material && o.geometry)) meshes.push(o);
-          if (Array.isArray(o.children)) o.children.forEach(walk);
-          for (const key of containerKeys) {
-            const val = o[key];
-            if (!val) continue;
-            if (Array.isArray(val)) val.forEach((v) => { if (looksLikeNode(v)) walk(v); });
-            else if (looksLikeNode(val)) walk(val);
-          }
-        };
-        walk(root);
-        return meshes;
-      };
-
-      // model-viewer hides its three scene behind several accessors; try them all.
-      const sceneCandidateRoots = (viewer) => {
-        const m = viewer.model;
-        const defs = [
-          ['viewer.scene', () => viewer.scene],
-          ['viewer.getArScene()', () => typeof viewer.getArScene === 'function' ? viewer.getArScene() : null],
-          ['viewer.model', () => m],
-          ['viewer.model.scene', () => m && m.scene],
-          ['viewer.model.gltf.scene', () => m && m.gltf && m.gltf.scene],
-          ['viewer.model.gltf.scenes[0]', () => m && m.gltf && m.gltf.scenes && m.gltf.scenes[0]],
-          ['viewer.model.correlatedSceneGraph.scene', () => m && m.correlatedSceneGraph && m.correlatedSceneGraph.scene],
-          ['viewer.gltf.scene', () => viewer.gltf && viewer.gltf.scene],
-          ['viewer.currentGLTF().scene', () => typeof viewer.currentGLTF === 'function' && viewer.currentGLTF().scene],
-          ['viewer.threeGLTF.scene', () => viewer.threeGLTF && viewer.threeGLTF.scene],
-          ['viewer.threeGLTF.scenes[0]', () => viewer.threeGLTF && viewer.threeGLTF.scenes && viewer.threeGLTF.scenes[0]],
-        ];
-        const out = [];
-        for (const [label, fn] of defs) {
-          try {
-            const r = fn();
-            if (r && typeof r === 'object' && (r.isMesh || Array.isArray(r.children) || typeof r.traverse === 'function')) {
-              out.push({ label, root: r });
-            }
-          } catch (e) { /* ignore */ }
-        }
-        return out;
-      };
-
-      // Gather meshes from every plausible entry point on a viewer (union, deduped).
-      const getViewerMeshes = (viewer) => {
-        const pool = new Set();
-        for (const { root } of sceneCandidateRoots(viewer)) {
-          collectMeshes(root).forEach((mesh) => pool.add(mesh));
-        }
-        return [...pool];
-      };
-
-      const cn = (o) => { try { return Object.getPrototypeOf(o).constructor.name; } catch (e) { return '?'; } };
-      const countMesh = (o) => { let c = 0; try { o.traverse((n) => { if (n.isMesh) c += 1; }); } catch (e) { return -1; } return c; };
-      const isNodeish = (o) => !!o && typeof o === 'object' &&
-        (o.isMesh || Array.isArray(o.children) || typeof o.traverse === 'function');
-      const protoNames = (o) => {
-        const set = new Set();
-        let p = o && Object.getPrototypeOf(o);
-        while (p && p !== Object.prototype) {
-          Object.getOwnPropertyNames(p).forEach((n) => { if (n !== 'constructor') set.add(n); });
-          p = Object.getPrototypeOf(p);
-        }
-        return [...set];
-      };
-      const albedoDiag = (viewer) => {
-        const p = [];
-        const m = viewer.model;
-        const reScene = /scene|gltf|model|correlated|three|instance|mesh|node|root/i;
-        const elNames = protoNames(viewer).filter((n) => reScene.test(n)).slice(0, 12);
-        const modelNames = m ? protoNames(m).filter((n) => reScene.test(n)).slice(0, 12) : [];
-        p.push('model=' + (m ? cn(m) : 'null'));
-        p.push('el=[' + elNames.join(',') + ']');
-        p.push('mp=[' + modelNames.join(',') + ']');
-        const cands = sceneCandidateRoots(viewer);
-        p.push('cands=[' + cands.map((c) => c.label + ':' + countMesh(c.root)).join(', ') + ']');
-        p.push('TOTAL=' + getViewerMeshes(viewer).length);
-        return p.join(' | ');
-      };
-
-      const makeUnlit = (orig) => {
-        const albedoTex = orig.map || orig.emissiveMap || null;
-        const u = orig.clone();
-        if (u.emissive && u.color) {
-          u.color.setScalar(0);          // kill lit diffuse
-          u.emissive.setScalar(1);        // emissive = white * emissiveMap
-          u.emissiveMap = albedoTex;      // base color becomes the lit-free output
-          u.emissiveIntensity = 1;
-          u.envMapIntensity = 0;          // drop IBL reflection
-          if ('metalness' in u) u.metalness = 0;
-          if ('roughness' in u) u.roughness = 1;
-          u.map = null;
-          u.normalMap = null;
-          u.bumpMap = null;
-          u.roughnessMap = null;
-          u.metalnessMap = null;
-          u.aoMap = null;
-          if ('clearcoat' in u) u.clearcoat = 0;
-          if ('sheen' in u) u.sheen = 0;
-          if ('transmission' in u) u.transmission = 0;
-          if ('iridescence' in u) u.iridescence = 0;
-        } else if (albedoTex) {
-          u.map = albedoTex;              // already-unlit material (e.g. basic)
-        }
-        u.needsUpdate = true;
-        return u;
-      };
-
-      const applyAlbedoToViewer = (viewer, on) => {
-        const meshes = getViewerMeshes(viewer);
-        let changed = 0;
-        meshes.forEach((node) => {
-          if (on) {
-            if (node.userData._origMats) return;   // already swapped
-            node.userData._origMats = node.material;
-            node.material = Array.isArray(node.material)
-              ? node.material.map(makeUnlit)
-              : makeUnlit(node.material);
-            changed += 1;
-          } else if (node.userData._origMats) {
-            node.material = node.userData._origMats;
-            node.userData._origMats = undefined;
-            changed += 1;
-          }
-        });
-        console.log('[albedo] ' + (on ? 'unlit' : 'lit') + ' swapped meshes:', changed, '(found', meshes.length, ')');
-        // Force a redraw — model-viewer may render on demand and miss the swap.
-        if (typeof viewer.requestUpdate === 'function') viewer.requestUpdate();
-        if (typeof viewer.jumpCameraToGoal === 'function') viewer.jumpCameraToGoal();
-        return { found: meshes.length, changed };
-      };
-
-      const showAlbedoStatus = (text) => {
-        let banner = document.getElementById('albedo-debug');
-        if (!banner) {
-          banner = document.createElement('div');
-          banner.id = 'albedo-debug';
-          banner.style.cssText = 'position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:99999;' +
-            'background:#111a;color:#fff;padding:10px 16px;border-radius:10px;font:13px/1.4 monospace;' +
-            'box-shadow:0 6px 24px rgba(0,0,0,.35);pointer-events:none;transition:opacity .4s ease;max-width:80vw;';
-          document.body.append(banner);
-        }
-        banner.textContent = text;
-        banner.style.opacity = '1';
-        clearTimeout(showAlbedoStatus._t);
-        showAlbedoStatus._t = setTimeout(() => { banner.style.opacity = '0'; }, 6000);
-      };
-
-      const setAlbedo = (on) => {
-        if (!enableAlbedo) return;
-        albedoMode = on;
-        const rOurs = applyAlbedoToViewer(compareOurs, on);
-        const rBase = applyAlbedoToViewer(compareTrellis, on);
-        albedoButtons.forEach((b) => {
-          b.setAttribute('aria-pressed', String(on));
-        });
-        if (rOurs.found === 0 && rBase.found === 0) {
-          showAlbedoStatus('found 0 — ' + albedoDiag(compareOurs));
-        } else {
-          showAlbedoStatus('Albedo ' + (on ? 'ON' : 'OFF') +
-            ' — TaoTex found:' + rOurs.found + '/swap:' + rOurs.changed +
-            ' · Method found:' + rBase.found + '/swap:' + rBase.changed);
-        }
+      // Apply a viewer's baseZoom on top of its captured auto-frame radius, then
+      // re-point the camera there and store the result as the wheel-zoom baseline.
+      const applyBaseZoom = (viewer, which) => {
+        const auto = which === 'ours' ? autoRadiusOurs : autoRadiusTrellis;
+        const z = which === 'ours' ? oursBaseZoom : trellisBaseZoom;
+        if (!auto) return;
+        const target = auto * z;
+        const o = viewer.getCameraOrbit();
+        viewer.setAttribute('camera-orbit', `${o.theta}rad ${o.phi}rad ${target}m`);
+        viewer.jumpCameraToGoal();
+        if (which === 'ours') initialRadiusOurs = target;
+        else initialRadiusTrellis = target;
       };
 
       const getActiveBaseline = (model) => {
@@ -1636,6 +1542,8 @@ For training this model, we develop a 3D asset data construction agent based on 
         oursLoaded = false;
         setCellLoading(oursCell, oursFill, true);
         if (oursDragHint) oursDragHint.classList.remove('is-hidden');
+        oursBaseZoom = sanitizeZoom(model.baseZoom);
+        autoRadiusOurs = null;
         resetViewer(compareOurs, 0);
         compareOurs.setAttribute('src', model.src);
         compareOurs.alt = `TaoTex result: ${model.label}`;
@@ -1651,6 +1559,9 @@ For training this model, we develop a 3D asset data construction agent based on 
         if (trellisDragHint) trellisDragHint.classList.remove('is-hidden');
         baseYawDeg = (typeof base.yawDeg === 'number') ? base.yawDeg : 0;
         baseYawRad = baseYawDeg * Math.PI / 180;
+        trellisBaseZoom = sanitizeZoom(
+          (typeof base.baseZoom === 'number') ? base.baseZoom : model.baseZoom);
+        autoRadiusTrellis = null;
         resetViewer(compareTrellis, baseYawDeg);
         if (compareBaseLabel) compareBaseLabel.textContent = base.name;
         compareTrellis.setAttribute('src', base.src);
@@ -1710,27 +1621,6 @@ For training this model, we develop a 3D asset data construction agent based on 
           });
           methodSwitcher.append(button);
         });
-      }
-
-      // ===== Albedo toggle buttons (S2 only, one per window, shared state) =====
-      if (enableAlbedo) {
-        const buildAlbedoButton = (cell) => {
-          const btn = document.createElement('button');
-          btn.className = 'albedo-toggle';
-          btn.type = 'button';
-          btn.textContent = 'Albedo';
-          btn.setAttribute('aria-pressed', 'false');
-          btn.setAttribute('aria-label', 'Toggle unlit albedo texture view');
-          btn.addEventListener('pointerdown', (event) => {
-            event.stopPropagation();   // don't begin a viewer drag
-          });
-          btn.addEventListener('click', () => {
-            setAlbedo(!albedoMode);
-          });
-          cell.append(btn);
-          return btn;
-        };
-        albedoButtons.push(buildAlbedoButton(trellisCell), buildAlbedoButton(oursCell));
       }
 
       // ===== Zoom (shared scale, per-viewer absolute radius) =====
@@ -1898,6 +1788,25 @@ For training this model, we develop a 3D asset data construction agent based on 
         return baseYawDeg;
       };
 
+      // Live helper to dial the CURRENT object's default near/far framing:
+      // run tuneBaseZoom(factor, showcaseIndex) (factor: <1 closer, >1 farther),
+      // eyeball it, then copy that number into this model's `baseZoom` above.
+      root.tuneBaseZoom = (factor) => {
+        const f = Number(factor);
+        if (!Number.isFinite(f) || f <= 0) { console.warn('tuneBaseZoom needs a positive number'); return; }
+        const base = getActiveBaseline(currentModel);
+        currentModel.baseZoom = f;
+        oursBaseZoom = f;
+        trellisBaseZoom = sanitizeZoom((typeof base.baseZoom === 'number') ? base.baseZoom : f);
+        zoomScale = 1.0;
+        autoRotateActive = false;
+        lastInteractionTime = performance.now();
+        applyBaseZoom(compareOurs, 'ours');
+        applyBaseZoom(compareTrellis, 'baseline');
+        console.log(`${currentModel.id} baseZoom = ${f} (tuneBaseZoom(${f}, ${roots.indexOf(root)}))`);
+        return f;
+      };
+
       // ===== Load events =====
       compareOurs.addEventListener('progress', (event) => {
         if (oursLoaded) return;
@@ -1907,14 +1816,14 @@ For training this model, we develop a 3D asset data construction agent based on 
 
       compareOurs.addEventListener('load', () => {
         oursLoaded = true;
-        resetViewer(compareOurs);
+        resetViewer(compareOurs, 0);
         compareOurs.jumpCameraToGoal();
         requestAnimationFrame(() => {
-          initialRadiusOurs = compareOurs.getCameraOrbit().radius;
+          autoRadiusOurs = compareOurs.getCameraOrbit().radius;
+          applyBaseZoom(compareOurs, 'ours');
           initialTargetOurs = compareOurs.getCameraTarget();
         });
         setCellLoading(oursCell, oursFill, false);
-        if (albedoMode) applyAlbedoToViewer(compareOurs, true);
       });
 
       compareOurs.addEventListener('error', () => {
@@ -1933,11 +1842,11 @@ For training this model, we develop a 3D asset data construction agent based on 
         resetViewer(compareTrellis, baseYawDeg);
         compareTrellis.jumpCameraToGoal();
         requestAnimationFrame(() => {
-          initialRadiusTrellis = compareTrellis.getCameraOrbit().radius;
+          autoRadiusTrellis = compareTrellis.getCameraOrbit().radius;
+          applyBaseZoom(compareTrellis, 'baseline');
           initialTargetTrellis = compareTrellis.getCameraTarget();
         });
         setCellLoading(trellisCell, trellisFill, false);
-        if (albedoMode) applyAlbedoToViewer(compareTrellis, true);
       });
 
       compareTrellis.addEventListener('error', () => {
@@ -1963,6 +1872,70 @@ For training this model, we develop a 3D asset data construction agent based on 
         }
         return r.tuneBaseYaw(deg);
       };
+
+      // Global console helper: tuneBaseZoom(factor, showcaseIndex) — index 0 or 1.
+      window.tuneBaseZoom = (factor, index = 0) => {
+        const r = roots[index];
+        if (!r || typeof r.tuneBaseZoom !== 'function') {
+          console.warn('no showcase at index', index);
+          return;
+        }
+        return r.tuneBaseZoom(factor);
+      };
+    })();
+  </script>
+
+  <script>
+    (() => {
+      const open = (src, alt) => {
+        let box = document.querySelector('.lightbox');
+        if (!box) {
+          box = document.createElement('div');
+          box.className = 'lightbox';
+          box.innerHTML =
+            '<button class="lightbox-close" type="button" aria-label="Close">&times;</button>' +
+            '<img alt="">';
+          document.body.append(box);
+          const close = () => hide(box);
+          box.addEventListener('click', (e) => {
+            if (e.target === box || e.target.classList.contains('lightbox-close') || e.target.tagName === 'IMG') close();
+          });
+        }
+        const img = box.querySelector('img');
+        img.src = src;
+        img.alt = alt || '';
+        box.classList.add('is-open');
+        document.body.style.overflow = 'hidden';
+      };
+
+      const hide = (box) => {
+        box.classList.remove('is-open');
+        document.body.style.overflow = '';
+      };
+
+      const resolveLightbox = (fig) => {
+        if (!fig) return null;
+        const img = fig.matches && fig.matches('img') ? fig : fig.querySelector('img');
+        const src = fig.getAttribute('data-lightbox') || (img && img.getAttribute('src'));
+        if (!src) return null;
+        return { src, alt: img ? (img.getAttribute('alt') || '') : '' };
+      };
+
+      document.addEventListener('click', (e) => {
+        const fig = e.target.closest('[data-lightbox]');
+        const r = resolveLightbox(fig);
+        if (r) open(r.src, r.alt);
+      });
+
+      document.addEventListener('keydown', (e) => {
+        const box = document.querySelector('.lightbox.is-open');
+        if (e.key === 'Escape') { if (box) hide(box); return; }
+        if ((e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar')) {
+          const fig = e.target.closest && e.target.closest('[data-lightbox]');
+          const r = resolveLightbox(fig);
+          if (r) { e.preventDefault(); open(r.src, r.alt); }
+        }
+      });
     })();
   </script>
 </body>
