@@ -1449,19 +1449,21 @@ For training this model, we develop a 3D asset data construction agent based on 
       const collectMeshes = (root) => {
         const meshes = [];
         const seen = new Set();
-        const containerKeys = ['scene', 'model', 'gltf', '_model', '_currentModel', 'root', 'scenes'];
+        const containerKeys = ['scene', 'model', 'gltf', '_model', '_currentModel', 'root', 'scenes', 'instances', 'parent'];
+        let steps = 0;
+        const looksLikeNode = (o) => !!o && typeof o === 'object' &&
+          (o.isMesh || Array.isArray(o.children) || typeof o.traverse === 'function' ||
+           (o.material && o.geometry) || o.scene || o.gltf);
         const walk = (o) => {
-          if (!o || typeof o !== 'object' || seen.has(o)) return;
+          if (!o || typeof o !== 'object' || seen.has(o) || steps++ > 20000) return;
           seen.add(o);
           if (o.isMesh || (o.material && o.geometry)) meshes.push(o);
-          const isObject3D = Array.isArray(o.children) || typeof o.traverse === 'function';
           if (Array.isArray(o.children)) o.children.forEach(walk);
-          if (!isObject3D) {
-            for (const key of containerKeys) {
-              const val = o[key];
-              if (!val || typeof val !== 'object') continue;
-              if (Array.isArray(val)) val.forEach(walk); else walk(val);
-            }
+          for (const key of containerKeys) {
+            const val = o[key];
+            if (!val) continue;
+            if (Array.isArray(val)) val.forEach((v) => { if (looksLikeNode(v)) walk(v); });
+            else if (looksLikeNode(val)) walk(val);
           }
         };
         walk(root);
@@ -1527,7 +1529,7 @@ For training this model, we develop a 3D asset data construction agent based on 
         // Force a redraw — model-viewer may render on demand and miss the swap.
         if (typeof viewer.requestUpdate === 'function') viewer.requestUpdate();
         if (typeof viewer.jumpCameraToGoal === 'function') viewer.jumpCameraToGoal();
-        return changed;
+        return { found: meshes.length, changed };
       };
 
       const showAlbedoStatus = (text) => {
@@ -1549,12 +1551,14 @@ For training this model, we develop a 3D asset data construction agent based on 
       const setAlbedo = (on) => {
         if (!enableAlbedo) return;
         albedoMode = on;
-        const nOurs = applyAlbedoToViewer(compareOurs, on);
-        const nBase = applyAlbedoToViewer(compareTrellis, on);
+        const rOurs = applyAlbedoToViewer(compareOurs, on);
+        const rBase = applyAlbedoToViewer(compareTrellis, on);
         albedoButtons.forEach((b) => {
           b.setAttribute('aria-pressed', String(on));
         });
-        showAlbedoStatus('Albedo ' + (on ? 'ON' : 'OFF') + ' — swapped TaoTex:' + nOurs + ' / Method:' + nBase);
+        showAlbedoStatus('Albedo ' + (on ? 'ON' : 'OFF') +
+          ' — TaoTex found:' + rOurs.found + '/swap:' + rOurs.changed +
+          ' · Method found:' + rBase.found + '/swap:' + rBase.changed);
       };
 
       const getActiveBaseline = (model) => {
