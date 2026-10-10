@@ -1024,9 +1024,9 @@ For training this model, we develop a 3D asset data construction agent based on 
               </div>
             </div>
             <div class="compare-cell">
-              <span class="compare-cell-label">TRELLIS.2</span>
+              <span class="compare-cell-label" id="compare-baseline-label">TRELLIS.2</span>
               <model-viewer id="compare-trellis-viewer"
-                alt="TRELLIS.2 result"
+                alt="Baseline result"
                 camera-controls
                 camera-orbit="0deg 75deg 105%"
                 disable-zoom
@@ -1093,14 +1093,22 @@ For training this model, we develop a 3D asset data construction agent based on 
 
   <script>
     (() => {
+      // Each model pairs TaoTex (`src`) against a baseline comparison method.
+      // `baseline.name` is the label shown on the right 3D window, and
+      // `baseline.src` is that method's glb. Swap in any method you like
+      // (TRELLIS.2, Hunyuan3D, …) per row — no code changes needed.
       const models = [
-        { id: 'cloth', label: 'Cloth', src: 'showcase/cloth.glb', trellis2Src: 'showcase/cloth_trellis2.glb', image: 'showcase/cloth.png' },
-        { id: 'bag', label: 'Bag', src: 'showcase/bag.glb', trellis2Src: 'showcase/bag_trellis2.glb', image: 'showcase/bag.png' },
-        { id: 'shield', label: 'Shield', src: 'showcase/shield.glb', trellis2Src: 'showcase/shield_trellis2.glb', image: 'showcase/shield.png' },
+        { id: 'cloth',  label: 'Cloth',  src: 'showcase/cloth.glb',  image: 'showcase/cloth.png',  baseline: { name: 'TRELLIS.2',  src: 'showcase/cloth_trellis2.glb' } },
+        { id: 'bag',    label: 'Bag',    src: 'showcase/bag.glb',    image: 'showcase/bag.png',    baseline: { name: 'TRELLIS.2',  src: 'showcase/bag_trellis2.glb' } },
+        { id: 'shield', label: 'Shield', src: 'showcase/shield.glb', image: 'showcase/shield.png', baseline: { name: 'TRELLIS.2',  src: 'showcase/shield_trellis2.glb' } },
+        // { id: 'chair', label: 'Chair', src: 'showcase/chair.glb', image: 'showcase/chair.png', baseline: { name: 'TRELLIS.2', src: 'showcase/chair_trellis2.glb' } },
+        { id: 'bag2',   label: 'bag2',   src: 'showcase/bag2.glb',   image: 'showcase/bag2.png',   baseline: { name: 'Hunyuan3D', src: 'showcase/bag2_hy.glb' } },
       ];
 
       const compareOurs = document.querySelector('#compare-ours-viewer');
+      // The "baseline" viewer (right-hand compare cell). Historically TRELLIS.2.
       const compareTrellis = document.querySelector('#compare-trellis-viewer');
+      const compareBaseLabel = document.querySelector('#compare-baseline-label');
       const inputImage = document.querySelector('#showcase-input-image');
       const assetSwitcher = document.querySelector('#asset-switcher');
       const initialCameraOrbit = '0deg 75deg 105%';
@@ -1162,8 +1170,10 @@ For training this model, we develop a 3D asset data construction agent based on 
         resetViewer(compareTrellis);
         compareOurs.setAttribute('src', model.src);
         compareOurs.alt = `TaoTex result: ${model.label}`;
-        compareTrellis.setAttribute('src', model.trellis2Src);
-        compareTrellis.alt = `TRELLIS.2 result: ${model.label}`;
+        const base = model.baseline || { name: 'TRELLIS.2', src: model.trellis2Src };
+        if (compareBaseLabel) compareBaseLabel.textContent = base.name;
+        compareTrellis.setAttribute('src', base.src);
+        compareTrellis.alt = `${base.name} result: ${model.label}`;
       };
 
       const loadModel = (model) => {
