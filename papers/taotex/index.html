@@ -684,6 +684,26 @@
       right: 16px;
       bottom: 16px;
       padding: 8px 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      box-shadow: 0 6px 18px rgba(8, 20, 13, 0.14);
+    }
+
+    .viewer-hint svg {
+      width: 14px;
+      height: 14px;
+      flex: none;
+      display: block;
+    }
+
+    @keyframes hint-pulse {
+      0%, 100% { transform: scale(1); box-shadow: 0 6px 18px rgba(8, 20, 13, 0.14); }
+      50%      { transform: scale(1.06); box-shadow: 0 8px 22px rgba(8, 20, 13, 0.22); }
+    }
+
+    .showcase-instance:not(.interacted) .viewer-hint {
+      animation: hint-pulse 1.8s ease-in-out infinite;
     }
 
     .cell-loading {
@@ -1087,7 +1107,7 @@ For training this model, we develop a 3D asset data construction agent based on 
               <div class="cell-loading-bar"><span class="cell-loading-fill"></span></div>
             </div>
           </div>
-          <p class="viewer-hint">Drag to rotate · Right-drag to pan</p>
+          <p class="viewer-hint"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="8 6 3 12 8 18"/><polyline points="16 6 21 12 16 18"/></svg>Drag to rotate · Right-drag to pan</p>
         </div>
       </div>
     </section>
@@ -1152,7 +1172,7 @@ For training this model, we develop a 3D asset data construction agent based on 
                 <div class="cell-loading-bar"><span class="cell-loading-fill"></span></div>
               </div>
             </div>
-            <p class="viewer-hint">Drag to rotate · Right-drag to pan</p>
+            <p class="viewer-hint"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="8 6 3 12 8 18"/><polyline points="16 6 21 12 16 18"/></svg>Drag to rotate · Right-drag to pan</p>
           </div>
         </div>
       </div>
@@ -1381,11 +1401,13 @@ For training this model, we develop a 3D asset data construction agent based on 
       oursCell.addEventListener('pointerdown', () => {
         userDragging = 'ours';
         autoRotateActive = false;
+        root.classList.add('interacted');
         seedOrbit(compareOurs);
       });
       trellisCell.addEventListener('pointerdown', () => {
         userDragging = 'trellis';
         autoRotateActive = false;
+        root.classList.add('interacted');
         seedOrbit(compareTrellis);
       });
       window.addEventListener('pointerup', () => {
