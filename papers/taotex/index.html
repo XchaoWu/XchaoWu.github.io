@@ -613,6 +613,40 @@
       box-shadow: 0 0 0 2px rgba(28, 78, 55, 0.18);
     }
 
+    .method-switcher {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      margin: 0 0 18px;
+    }
+
+    .method-button {
+      padding: 7px 16px;
+      border: 1.5px solid var(--line);
+      border-radius: 999px;
+      background: #ffffff;
+      color: #4a5560;
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 1;
+      cursor: pointer;
+      transition: border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease, background 0.2s ease;
+    }
+
+    .method-button:hover {
+      border-color: rgba(233, 75, 0, 0.45);
+      color: #e94b00;
+      transform: translateY(-1px);
+    }
+
+    .method-button[aria-pressed="true"] {
+      border-color: transparent;
+      color: #ffffff;
+      background: linear-gradient(90deg, #ff9a32 0%, #ff6a00 52%, #e94b00 100%);
+      box-shadow: 0 4px 14px rgba(233, 75, 0, 0.28);
+    }
+
     .showcase-content {
       display: grid;
       grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
@@ -1157,70 +1191,66 @@ For training this model, we develop a 3D asset data construction agent based on 
       </div>
 
       <div class="model-viewer-panel showcase-instance">
-        <div class="model-toolbar">
-          <div class="model-control-group">
-            <span class="model-control-label">Object</span>
-            <div class="asset-switcher" role="group" aria-label="Select 3D object"></div>
-          </div>
-        </div>
+        <div class="method-switcher" role="group" aria-label="Select baseline method"></div>
 
-        <div class="showcase-content">
+        <div class="showcase-content showcase-hero">
           <figure class="input-image-panel">
-            <figcaption class="input-image-label">Input Image</figcaption>
+            <figcaption class="input-image-label">Object</figcaption>
+            <div class="asset-switcher" role="group" aria-label="Select 3D object"></div>
+            <span class="input-image-label">Input Image</span>
             <div class="input-image-frame">
-              <img class="showcase-input-image" src="showcase/chair.png" alt="Input image for Chair">
+              <img class="showcase-input-image" src="showcase/red.png" alt="Input image for Red">
             </div>
           </figure>
 
-          <div class="compare-stage">
-            <div class="compare-cell">
-              <span class="compare-cell-label compare-ours-label">TaoTex</span>
-              <model-viewer class="compare-ours-viewer"
-                alt="TaoTex result"
-                camera-controls
-                camera-orbit="0deg 75deg 105%"
-                disable-zoom
-                touch-action="pan-y"
-                environment-image="neutral"
-                shadow-intensity="1.15"
-                shadow-softness="0.85"
-                exposure="1"
-                loading="lazy"
-                interaction-prompt="none">
-              </model-viewer>
-              <div class="drag-hint" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="url(#dragHandGrad)" stroke="#ffffff" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"><defs><linearGradient id="dragHandGrad" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#ff9a32"/><stop offset="52%" stop-color="#ff6a00"/><stop offset="100%" stop-color="#e94b00"/></linearGradient></defs><path d="M18 11V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2"/><path d="M14 10V4a2 2 0 0 0-2-2a2 2 0 0 0-2 2v2"/><path d="M10 10.5V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg>
-                <span class="drag-hint-caption">Drag to rotate</span>
-              </div>
-              <div class="cell-loading" aria-hidden="true">
-                <div class="cell-loading-bar"><span class="cell-loading-fill"></span></div>
-              </div>
+          <div class="compare-cell">
+            <span class="compare-cell-label compare-baseline-label">Tripo v3.1</span>
+            <model-viewer class="compare-trellis-viewer"
+              alt="Baseline result"
+              camera-controls
+              camera-orbit="0deg 75deg 105%"
+              disable-zoom
+              touch-action="pan-y"
+              environment-image="neutral"
+              shadow-intensity="1.15"
+              shadow-softness="0.85"
+              exposure="1"
+              loading="lazy"
+              interaction-prompt="none">
+            </model-viewer>
+            <div class="drag-hint" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="url(#dragHandGrad)" stroke="#ffffff" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"><path d="M18 11V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2"/><path d="M14 10V4a2 2 0 0 0-2-2a2 2 0 0 0-2 2v2"/><path d="M10 10.5V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg>
+              <span class="drag-hint-caption">Drag to rotate</span>
             </div>
-            <div class="compare-cell">
-              <span class="compare-cell-label compare-baseline-label">Tripo v3.1</span>
-              <model-viewer class="compare-trellis-viewer"
-                alt="Baseline result"
-                camera-controls
-                camera-orbit="0deg 75deg 105%"
-                disable-zoom
-                touch-action="pan-y"
-                environment-image="neutral"
-                shadow-intensity="1.15"
-                shadow-softness="0.85"
-                exposure="1"
-                loading="lazy"
-                interaction-prompt="none">
-              </model-viewer>
-              <div class="drag-hint" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="url(#dragHandGrad)" stroke="#ffffff" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"><defs><linearGradient id="dragHandGrad" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#ff9a32"/><stop offset="52%" stop-color="#ff6a00"/><stop offset="100%" stop-color="#e94b00"/></linearGradient></defs><path d="M18 11V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2"/><path d="M14 10V4a2 2 0 0 0-2-2a2 2 0 0 0-2 2v2"/><path d="M10 10.5V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg>
-                <span class="drag-hint-caption">Drag to rotate</span>
-              </div>
-              <div class="cell-loading" aria-hidden="true">
-                <div class="cell-loading-bar"><span class="cell-loading-fill"></span></div>
-              </div>
+            <div class="cell-loading" aria-hidden="true">
+              <div class="cell-loading-bar"><span class="cell-loading-fill"></span></div>
             </div>
-            <p class="viewer-hint">Drag to rotate · Right-drag to pan</p>
           </div>
+
+          <div class="compare-cell">
+            <span class="compare-cell-label compare-ours-label">TaoTex</span>
+            <model-viewer class="compare-ours-viewer"
+              alt="TaoTex result"
+              camera-controls
+              camera-orbit="0deg 75deg 105%"
+              disable-zoom
+              touch-action="pan-y"
+              environment-image="neutral"
+              shadow-intensity="1.15"
+              shadow-softness="0.85"
+              exposure="1"
+              loading="lazy"
+              interaction-prompt="none">
+            </model-viewer>
+            <div class="drag-hint" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="url(#dragHandGrad)" stroke="#ffffff" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"><path d="M18 11V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2"/><path d="M14 10V4a2 2 0 0 0-2-2a2 2 0 0 0-2 2v2"/><path d="M10 10.5V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg>
+              <span class="drag-hint-caption">Drag to rotate</span>
+            </div>
+            <div class="cell-loading" aria-hidden="true">
+              <div class="cell-loading-bar"><span class="cell-loading-fill"></span></div>
+            </div>
+          </div>
+          <p class="viewer-hint">Drag to rotate · Right-drag to pan</p>
         </div>
       </div>
     </section>
@@ -1283,9 +1313,19 @@ For training this model, we develop a 3D asset data construction agent based on 
           { id: 'bag',    label: 'Bag',    src: 'showcase/bag.glb',    image: 'showcase/bag.png',    baseline: { name: 'TRELLIS.2',      src: 'showcase/bag_trellis2.glb',    yawDeg: 0 } },
           { id: 'shield', label: 'Shield', src: 'showcase/shield.glb', image: 'showcase/shield.png', baseline: { name: 'TRELLIS.2',      src: 'showcase/shield_trellis2.glb', yawDeg: 0 } },
         ],
-        [ // Showcase 2 — vs Tripo / Hunyuan3D
-          { id: 'chair',  label: 'Chair',  src: 'showcase/chair.glb',  image: 'showcase/chair.png',  baseline: { name: 'Tripo v3.1',     src: 'showcase/chair_tripo.glb',     yawDeg: 0 } },
-          { id: 'bag2',   label: 'bag2',   src: 'showcase/bag2.glb',   image: 'showcase/bag2.png',   baseline: { name: 'Hunyuan3D v3.1', src: 'showcase/bag2_hy.glb',         yawDeg: 0 } },
+        [ // Showcase 2 — TaoTex vs switchable SOTA baselines
+          { id: 'red',    label: 'Red',    src: 'showcase/red.glb',    image: 'showcase/red.png',
+            methods: [
+              { name: 'Tripo v3.1',   src: 'showcase/red_tripo.glb',  yawDeg: 0 },
+              { name: 'Hunyuan v3.1', src: 'showcase/red_hy.glb',     yawDeg: 0 },
+              { name: 'Rodin gen2.5', src: 'showcase/red_rodin.glb',  yawDeg: 0 },
+            ] },
+          { id: 'teapot', label: 'Teapot', src: 'showcase/teapot.glb', image: 'showcase/teapot.png',
+            methods: [
+              { name: 'Tripo v3.1',   src: 'showcase/teapot_tripo.glb',  yawDeg: 0 },
+              { name: 'Hunyuan v3.1', src: 'showcase/teapot_hy.glb',     yawDeg: 0 },
+              { name: 'Rodin gen2.5', src: 'showcase/teapot_rodin.glb',  yawDeg: 0 },
+            ] },
         ],
       ];
 
@@ -1297,6 +1337,7 @@ For training this model, we develop a 3D asset data construction agent based on 
         const compareBaseLabel = root.querySelector('.compare-baseline-label');
         const inputImage = root.querySelector('.showcase-input-image');
         const assetSwitcher = root.querySelector('.asset-switcher');
+        const methodSwitcher = root.querySelector('.method-switcher');
 
       const oursCell = compareOurs.closest('.compare-cell');
       const trellisCell = compareTrellis.closest('.compare-cell');
@@ -1322,6 +1363,7 @@ For training this model, we develop a 3D asset data construction agent based on 
       let trellisLoaded = false;
 
       let currentModel = models[0];
+      let currentMethodIndex = 0;
       let initialRadiusOurs = null;
       let initialRadiusTrellis = null;
       let initialTargetOurs = null;   // { x, y, z } — ours' auto-framed center
@@ -1350,28 +1392,46 @@ For training this model, we develop a 3D asset data construction agent based on 
         }
       };
 
-      const loadCompareViewers = (model) => {
+      const getActiveBaseline = (model) => {
+        if (model.baseline) return model.baseline;
+        if (Array.isArray(model.methods) && model.methods.length) {
+          const idx = Math.min(currentMethodIndex, model.methods.length - 1);
+          return model.methods[idx];
+        }
+        return { name: 'TRELLIS.2', src: model.trellis2Src };
+      };
+
+      const loadOursViewer = (model) => {
         initialRadiusOurs = null;
-        initialRadiusTrellis = null;
         initialTargetOurs = null;
-        initialTargetTrellis = null;
         zoomScale = 1.0;
         oursLoaded = false;
-        trellisLoaded = false;
         setCellLoading(oursCell, oursFill, true);
-        setCellLoading(trellisCell, trellisFill, true);
         if (oursDragHint) oursDragHint.classList.remove('is-hidden');
-        if (trellisDragHint) trellisDragHint.classList.remove('is-hidden');
-        const base = model.baseline || { name: 'TRELLIS.2', src: model.trellis2Src };
-        baseYawDeg = (typeof base.yawDeg === 'number') ? base.yawDeg : 0;
-        baseYawRad = baseYawDeg * Math.PI / 180;
         resetViewer(compareOurs, 0);
-        resetViewer(compareTrellis, baseYawDeg);
         compareOurs.setAttribute('src', model.src);
         compareOurs.alt = `TaoTex result: ${model.label}`;
+      };
+
+      const loadBaselineViewer = (model) => {
+        const base = getActiveBaseline(model);
+        initialRadiusTrellis = null;
+        initialTargetTrellis = null;
+        zoomScale = 1.0;
+        trellisLoaded = false;
+        setCellLoading(trellisCell, trellisFill, true);
+        if (trellisDragHint) trellisDragHint.classList.remove('is-hidden');
+        baseYawDeg = (typeof base.yawDeg === 'number') ? base.yawDeg : 0;
+        baseYawRad = baseYawDeg * Math.PI / 180;
+        resetViewer(compareTrellis, baseYawDeg);
         if (compareBaseLabel) compareBaseLabel.textContent = base.name;
         compareTrellis.setAttribute('src', base.src);
         compareTrellis.alt = `${base.name} result: ${model.label}`;
+      };
+
+      const loadCompareViewers = (model) => {
+        loadOursViewer(model);
+        loadBaselineViewer(model);
       };
 
       const loadModel = (model) => {
@@ -1401,6 +1461,28 @@ For training this model, we develop a 3D asset data construction agent based on 
         });
         assetSwitcher.append(button);
       });
+
+      // ===== Method switcher (switchable baselines, showcase 2 only) =====
+      if (methodSwitcher && models.some((m) => Array.isArray(m.methods) && m.methods.length)) {
+        const methodNames = (models.find((m) => Array.isArray(m.methods) && m.methods.length) || {}).methods || [];
+        methodNames.forEach((method, index) => {
+          const button = document.createElement('button');
+          button.className = 'method-button';
+          button.type = 'button';
+          button.dataset.methodIndex = String(index);
+          button.setAttribute('aria-pressed', String(index === currentMethodIndex));
+          button.textContent = method.name;
+          button.addEventListener('click', () => {
+            if (currentMethodIndex === index) return;
+            currentMethodIndex = index;
+            [...methodSwitcher.children].forEach((b) => {
+              b.setAttribute('aria-pressed', String(Number(b.dataset.methodIndex) === index));
+            });
+            loadBaselineViewer(currentModel);
+          });
+          methodSwitcher.append(button);
+        });
+      }
 
       // ===== Zoom (shared scale, per-viewer absolute radius) =====
       const computeZoomFactor = (event) => {
