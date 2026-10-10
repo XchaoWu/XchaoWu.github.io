@@ -1094,15 +1094,18 @@ For training this model, we develop a 3D asset data construction agent based on 
   <script>
     (() => {
       // Each model pairs TaoTex (`src`) against a baseline comparison method.
-      // `baseline.name` is the label shown on the right 3D window, and
-      // `baseline.src` is that method's glb. Swap in any method you like
-      // (TRELLIS.2, Hunyuan3D, …) per row — no code changes needed.
+      // `baseline.name` is the label shown on the right 3D window,
+      // `baseline.src` is that method's glb, and `baseline.yawDeg` is an
+      // optional heading fix: if the baseline GLB faces a different direction
+      // than TaoTex, set this to rotate ONLY the right viewer until they match.
+      // Tweak it live in the console with `tuneBaseYaw(90)` etc., then paste
+      // the winning value here. Swap methods freely (TRELLIS.2, Tripo, …).
       const models = [
-        { id: 'cloth',  label: 'Cloth',  src: 'showcase/cloth.glb',  image: 'showcase/cloth.png',  baseline: { name: 'TRELLIS.2',  src: 'showcase/cloth_trellis2.glb' } },
-        { id: 'bag',    label: 'Bag',    src: 'showcase/bag.glb',    image: 'showcase/bag.png',    baseline: { name: 'TRELLIS.2',  src: 'showcase/bag_trellis2.glb' } },
-        { id: 'shield', label: 'Shield', src: 'showcase/shield.glb', image: 'showcase/shield.png', baseline: { name: 'TRELLIS.2',  src: 'showcase/shield_trellis2.glb' } },
-        // { id: 'chair', label: 'Chair', src: 'showcase/chair.glb', image: 'showcase/chair.png', baseline: { name: 'TRELLIS.2', src: 'showcase/chair_trellis2.glb' } },
-        { id: 'bag2',   label: 'bag2',   src: 'showcase/bag2.glb',   image: 'showcase/bag2.png',   baseline: { name: 'Hunyuan3D', src: 'showcase/bag2_hy.glb' } },
+        { id: 'cloth',  label: 'Cloth',  src: 'showcase/cloth.glb',  image: 'showcase/cloth.png',  baseline: { name: 'TRELLIS.2',       src: 'showcase/cloth_trellis2.glb',  yawDeg: 0 } },
+        { id: 'bag',    label: 'Bag',    src: 'showcase/bag.glb',    image: 'showcase/bag.png',    baseline: { name: 'TRELLIS.2',       src: 'showcase/bag_trellis2.glb',    yawDeg: 0 } },
+        { id: 'shield', label: 'Shield', src: 'showcase/shield.glb', image: 'showcase/shield.png', baseline: { name: 'TRELLIS.2',       src: 'showcase/shield_trellis2.glb', yawDeg: 0 } },
+        { id: 'chair',  label: 'Chair',  src: 'showcase/chair.glb',  image: 'showcase/chair.png',  baseline: { name: 'Tripo v3.1',      src: 'showcase/chair_tripo.glb',     yawDeg: 0 } },
+        { id: 'bag2',   label: 'bag2',   src: 'showcase/bag2.glb',   image: 'showcase/bag2.png',   baseline: { name: 'Hunyuan3D v3.1',  src: 'showcase/bag2_hy.glb',         yawDeg: 0 } },
       ];
 
       const compareOurs = document.querySelector('#compare-ours-viewer');
@@ -1148,8 +1151,15 @@ For training this model, we develop a 3D asset data construction agent based on 
       const AUTO_ROTATE_SPEED = 8 * Math.PI / 180 / 1000; // rad per ms
       const AUTO_ROTATE_RESUME_DELAY = 3000; // ms
 
-      const resetViewer = (v) => {
-        v.setAttribute('camera-orbit', initialCameraOrbit);
+      // Heading (yaw) compensation for the baseline viewer. The baseline GLB's
+      // geometry may be authored facing a different direction than TaoTex's;
+      // we bias only the right viewer's azimuth by this offset so the two look
+      // aligned. Configured per model via `baseline.yawDeg`.
+      let baseYawDeg = 0;
+      let baseYawRad = 0;
+
+      const resetViewer = (v, yawDeg = 0) => {
+        v.setAttribute('camera-orbit', `${yawDeg}deg 75deg 105%`);
         v.setAttribute('camera-target', 'auto auto auto');
         if (typeof v.resetTurntableRotation === 'function') {
           v.resetTurntableRotation();
@@ -1166,11 +1176,13 @@ For training this model, we develop a 3D asset data construction agent based on 
         trellisLoaded = false;
         setCellLoading(oursCell, oursFill, true);
         setCellLoading(trellisCell, trellisFill, true);
-        resetViewer(compareOurs);
-        resetViewer(compareTrellis);
+        const base = model.baseline || { name: 'TRELLIS.2', src: model.trellis2Src };
+        baseYawDeg = (typeof base.yawDeg === 'number') ? base.yawDeg : 0;
+        baseYawRad = baseYawDeg * Math.PI / 180;
+        resetViewer(compareOurs, 0);
+        resetViewer(compareTrellis, baseYawDeg);
         compareOurs.setAttribute('src', model.src);
         compareOurs.alt = `TaoTex result: ${model.label}`;
-        const base = model.baseline || { name: 'TRELLIS.2', src: model.trellis2Src };
         if (compareBaseLabel) compareBaseLabel.textContent = base.name;
         compareTrellis.setAttribute('src', base.src);
         compareTrellis.alt = `${base.name} result: ${model.label}`;
@@ -1275,7 +1287,7 @@ For training this model, we develop a 3D asset data construction agent based on 
         }
       });
 
-      const syncTarget = (source, target, sInitR, tInitR, sInitT, tInitT) => {
+      const syncTarget = (source, target, sInitR, tInitR, sInitT, tInitT, offsetTheta = 0) => {
         const sOrbit = source.getCameraOrbit();
         const tOrbit = target.getCameraOrbit();
         const prev = prevSourceOrbit.get(source);
@@ -1285,8 +1297,9 @@ For training this model, we develop a 3D asset data construction agent based on 
         );
         prevSourceOrbit.set(source, { theta: sOrbit.theta, phi: sOrbit.phi });
 
-        // Mirror rotation angles; keep the follower's own radius (independent zoom)
-        target.setAttribute('camera-orbit', `${sOrbit.theta}rad ${sOrbit.phi}rad ${tOrbit.radius}m`);
+        // Mirror rotation angles (+ constant yaw bias), keep follower's own radius
+        target.setAttribute('camera-orbit',
+          `${sOrbit.theta + offsetTheta}rad ${sOrbit.phi}rad ${tOrbit.radius}m`);
 
         // Mirror pan as a scaled delta from each model's own center
         if (sInitR && tInitR && sInitT && tInitT) {
@@ -1308,11 +1321,11 @@ For training this model, we develop a 3D asset data construction agent based on 
         if (userDragging === 'ours') {
           syncTarget(compareOurs, compareTrellis,
             initialRadiusOurs, initialRadiusTrellis,
-            initialTargetOurs, initialTargetTrellis);
+            initialTargetOurs, initialTargetTrellis, +baseYawRad);
         } else if (userDragging === 'trellis') {
           syncTarget(compareTrellis, compareOurs,
             initialRadiusTrellis, initialRadiusOurs,
-            initialTargetTrellis, initialTargetOurs);
+            initialTargetTrellis, initialTargetOurs, -baseYawRad);
         }
 
         // 2. Resume auto-rotate after idle
@@ -1345,6 +1358,27 @@ For training this model, we develop a 3D asset data construction agent based on 
       };
       requestAnimationFrame(mainLoop);
 
+      // Live helper to dial the baseline heading offset while eyeballing the
+      // page: open DevTools console and run e.g. tuneBaseYaw(90),
+      // tuneBaseYaw(-90), tuneBaseYaw(180). It re-frames the right viewer
+      // against the left one instantly. Once aligned, copy that number into
+      // the model's baseline.yawDeg above.
+      window.tuneBaseYaw = (deg) => {
+        const d = Number(deg);
+        if (!Number.isFinite(d)) { console.warn('tuneBaseYaw needs a number'); return; }
+        baseYawDeg = d;
+        baseYawRad = d * Math.PI / 180;
+        autoRotateActive = false;
+        lastInteractionTime = performance.now();
+        const oO = compareOurs.getCameraOrbit();
+        const tR = compareTrellis.getCameraOrbit();
+        compareTrellis.setAttribute('camera-orbit',
+          `${oO.theta + baseYawRad}rad ${oO.phi}rad ${tR.radius}m`);
+        compareTrellis.jumpCameraToGoal();
+        console.log('baseline yawDeg =', baseYawDeg);
+        return baseYawDeg;
+      };
+
       // ===== Load events =====
       compareOurs.addEventListener('progress', (event) => {
         if (oursLoaded) return;
@@ -1376,7 +1410,7 @@ For training this model, we develop a 3D asset data construction agent based on 
 
       compareTrellis.addEventListener('load', () => {
         trellisLoaded = true;
-        resetViewer(compareTrellis);
+        resetViewer(compareTrellis, baseYawDeg);
         compareTrellis.jumpCameraToGoal();
         requestAnimationFrame(() => {
           initialRadiusTrellis = compareTrellis.getCameraOrbit().radius;
