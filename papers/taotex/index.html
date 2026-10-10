@@ -1446,31 +1446,36 @@ For training this model, we develop a 3D asset data construction agent based on 
       // lighting/specular. Works by cloning the material, forcing lit diffuse
       // to black (color=0) and routing the albedo texture through emissive
       // (which lights never touch), then clearing env + other shading maps.
-      const getSceneRoot = (viewer) => {
-        const m = viewer.model;
-        const candidates = [];
-        if (m) {
-          candidates.push(['model', m]);
-          if (m.gltf && m.gltf.scene) candidates.push(['model.gltf.scene', m.gltf.scene]);
-          if (m.gltf && Array.isArray(m.gltf.scenes)) {
-            m.gltf.scenes.forEach((s, i) => candidates.push([`model.gltf.scenes[${i}]`, s]));
+      const collectMeshes = (root) => {
+        const meshes = [];
+        const seen = new Set();
+        const containerKeys = ['scene', 'model', 'gltf', '_model', '_currentModel', 'root', 'scenes'];
+        const walk = (o) => {
+          if (!o || typeof o !== 'object' || seen.has(o)) return;
+          seen.add(o);
+          if (o.isMesh || (o.material && o.geometry)) meshes.push(o);
+          const isObject3D = Array.isArray(o.children) || typeof o.traverse === 'function';
+          if (Array.isArray(o.children)) o.children.forEach(walk);
+          if (!isObject3D) {
+            for (const key of containerKeys) {
+              const val = o[key];
+              if (!val || typeof val !== 'object') continue;
+              if (Array.isArray(val)) val.forEach(walk); else walk(val);
+            }
           }
-          if (m.scene) candidates.push(['model.scene', m.scene]);
-        }
-        if (typeof viewer.getArScene === 'function') {
-          try { const ar = viewer.getArScene(); if (ar) candidates.push(['getArScene()', ar]); } catch (e) { /* ignore */ }
-        }
-        for (const [name, root] of candidates) {
-          if (!root || typeof root.traverse !== 'function') continue;
-          let meshCount = 0;
-          root.traverse((node) => { if (node.isMesh) meshCount += 1; });
-          if (meshCount > 0) {
-            console.log('[albedo] scene root via', name, '-> meshes:', meshCount);
-            return root;
-          }
-        }
-        console.warn('[albedo] no mesh-bearing scene root found; has viewer.model?', !!m);
-        return null;
+        };
+        walk(root);
+        return meshes;
+      };
+
+      // Gather meshes from every plausible entry point on a viewer.
+      const getViewerMeshes = (viewer) => {
+        const pool = new Set();
+        const starts = [];
+        if (viewer.model) starts.push(viewer.model);
+        if (viewer.getArScene) { try { const ar = viewer.getArScene(); if (ar) starts.push(ar); } catch (e) { /* ignore */ } }
+        for (const s of starts) collectMeshes(s).forEach((mesh) => pool.add(mesh));
+        return [...pool];
       };
 
       const makeUnlit = (orig) => {
@@ -1502,11 +1507,9 @@ For training this model, we develop a 3D asset data construction agent based on 
       };
 
       const applyAlbedoToViewer = (viewer, on) => {
-        const sceneRoot = getSceneRoot(viewer);
-        if (!sceneRoot) return;
+        const meshes = getViewerMeshes(viewer);
         let changed = 0;
-        sceneRoot.traverse((node) => {
-          if (!node.isMesh) return;
+        meshes.forEach((node) => {
           if (on) {
             if (node.userData._origMats) return;   // already swapped
             node.userData._origMats = node.material;
@@ -1520,21 +1523,38 @@ For training this model, we develop a 3D asset data construction agent based on 
             changed += 1;
           }
         });
-        console.log('[albedo] ' + (on ? 'unlit' : 'lit') + ' swapped meshes:', changed);
+        console.log('[albedo] ' + (on ? 'unlit' : 'lit') + ' swapped meshes:', changed, '(found', meshes.length, ')');
         // Force a redraw — model-viewer may render on demand and miss the swap.
         if (typeof viewer.requestUpdate === 'function') viewer.requestUpdate();
         if (typeof viewer.jumpCameraToGoal === 'function') viewer.jumpCameraToGoal();
+        return changed;
+      };
+
+      const showAlbedoStatus = (text) => {
+        let banner = document.getElementById('albedo-debug');
+        if (!banner) {
+          banner = document.createElement('div');
+          banner.id = 'albedo-debug';
+          banner.style.cssText = 'position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:99999;' +
+            'background:#111a;color:#fff;padding:10px 16px;border-radius:10px;font:13px/1.4 monospace;' +
+            'box-shadow:0 6px 24px rgba(0,0,0,.35);pointer-events:none;transition:opacity .4s ease;max-width:80vw;';
+          document.body.append(banner);
+        }
+        banner.textContent = text;
+        banner.style.opacity = '1';
+        clearTimeout(showAlbedoStatus._t);
+        showAlbedoStatus._t = setTimeout(() => { banner.style.opacity = '0'; }, 6000);
       };
 
       const setAlbedo = (on) => {
         if (!enableAlbedo) return;
-        console.log('[albedo] setAlbedo ->', on);
         albedoMode = on;
-        applyAlbedoToViewer(compareOurs, on);
-        applyAlbedoToViewer(compareTrellis, on);
+        const nOurs = applyAlbedoToViewer(compareOurs, on);
+        const nBase = applyAlbedoToViewer(compareTrellis, on);
         albedoButtons.forEach((b) => {
           b.setAttribute('aria-pressed', String(on));
         });
+        showAlbedoStatus('Albedo ' + (on ? 'ON' : 'OFF') + ' — swapped TaoTex:' + nOurs + ' / Method:' + nBase);
       };
 
       const getActiveBaseline = (model) => {
