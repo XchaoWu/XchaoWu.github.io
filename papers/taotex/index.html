@@ -616,10 +616,12 @@
     .method-switcher {
       position: absolute;
       z-index: 3;
-      left: 16px;
+      left: 50%;
+      transform: translateX(-50%);
       bottom: 16px;
       display: flex;
       flex-wrap: wrap;
+      justify-content: center;
       gap: 8px;
       pointer-events: auto;
     }
@@ -1007,6 +1009,14 @@
 
       .showcase-content.showcase-hero {
         grid-template-columns: 1fr;
+      }
+
+      .method-switcher {
+        position: static;
+        transform: none;
+        width: 100%;
+        justify-content: center;
+        padding: 12px 0 2px;
       }
 
       .input-image-panel {
