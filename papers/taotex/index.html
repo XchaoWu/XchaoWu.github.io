@@ -1482,21 +1482,46 @@ For training this model, we develop a 3D asset data construction agent based on 
 
       const cn = (o) => { try { return Object.getPrototypeOf(o).constructor.name; } catch (e) { return '?'; } };
       const countMesh = (o) => { let c = 0; try { o.traverse((n) => { if (n.isMesh) c += 1; }); } catch (e) { return -1; } return c; };
+      const isNodeish = (o) => !!o && typeof o === 'object' &&
+        (o.isMesh || Array.isArray(o.children) || typeof o.traverse === 'function');
+      const protoNames = (o) => {
+        const set = new Set();
+        let p = o && Object.getPrototypeOf(o);
+        while (p && p !== Object.prototype) {
+          Object.getOwnPropertyNames(p).forEach((n) => { if (n !== 'constructor') set.add(n); });
+          p = Object.getPrototypeOf(p);
+        }
+        return [...set];
+      };
       const albedoDiag = (viewer) => {
         const p = [];
-        p.push('loaded=' + !!viewer.loaded);
         const m = viewer.model;
         p.push('model=' + (m ? cn(m) : 'null'));
-        p.push('keys=' + (m ? Object.keys(m).slice(0, 16).join(',') : '-'));
-        if (m && m.gltf) {
-          p.push('gltfSceneMeshes=' + (m.gltf.scene ? countMesh(m.gltf.scene) : 'no-scene'));
-        } else {
-          p.push('no-gltf');
+        if (!m) return p.join(' | ');
+        const hints = protoNames(m).filter((n) => /scene|model|gltf|child|root|mesh|object|instance|node|current/i.test(n)).slice(0, 12);
+        p.push('mp=[' + hints.join(',') + ']');
+        p.push('own=[' + Object.keys(m).slice(0, 10).join(',') + ']');
+        p.push('traverseMeshes=' + (typeof m.traverse === 'function' ? countMesh(m) : 'noTraverse'));
+        p.push('children=' + (Array.isArray(m.children) ? m.children.length : '-'));
+        // BFS to discover the access path to meshes
+        const queue = [{ node: m, path: 'model' }];
+        const seen = new Set([m]);
+        const accessors = protoNames(m);
+        let firstPath = null; let meshTotal = 0; let scanned = 0;
+        while (queue.length && scanned++ < 3000) {
+          const { node, path } = queue.shift();
+          if (node.isMesh) { meshTotal++; if (!firstPath) firstPath = path; continue; }
+          if (node.material && node.geometry) { meshTotal++; if (!firstPath) firstPath = path; }
+          const nexts = new Set();
+          Object.keys(node).forEach((k) => nexts.add(k));
+          if (path === 'model') accessors.forEach((k) => nexts.add(k));
+          for (const k of nexts) {
+            let val; try { val = node[k]; } catch (e) { continue; }
+            if (Array.isArray(val)) { val.forEach((v) => { if (isNodeish(v) && !seen.has(v)) { seen.add(v); queue.push({ node: v, path: path + '.' + k }); } }); }
+            else if (isNodeish(val) && !seen.has(val)) { seen.add(val); queue.push({ node: val, path: path + '.' + k }); }
+          }
         }
-        p.push('getArScene=' + typeof viewer.getArScene);
-        if (typeof viewer.getArScene === 'function') {
-          try { const ar = viewer.getArScene(); p.push('arMeshes=' + (ar ? countMesh(ar) : 'none')); } catch (e) { p.push('arERR'); }
-        }
+        p.push('meshPath=' + (firstPath || 'NONE') + '(#' + meshTotal + ')');
         return p.join(' | ');
       };
 
