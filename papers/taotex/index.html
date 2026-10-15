@@ -542,6 +542,7 @@
     #comparisons .compare-figure img {
       display: block;
       width: 100%;
+      aspect-ratio: 1.01 / 1.0;
       height: auto;
       border: 0;
       border-radius: 0;
@@ -713,16 +714,16 @@
     }
 
     .method-button:hover {
-      border-color: rgba(233, 75, 0, 0.45);
-      color: #e94b00;
+      border-color: rgba(28, 131, 84, 0.45);
+      color: #1c8354;
       transform: translateY(-1px);
     }
 
     .method-button[aria-pressed="true"] {
       border-color: transparent;
       color: #ffffff;
-      background: linear-gradient(90deg, #ff9a32 0%, #ff6a00 52%, #e94b00 100%);
-      box-shadow: 0 4px 14px rgba(233, 75, 0, 0.28);
+      background: linear-gradient(90deg, #4fc38a 0%, #2fa86b 52%, #1c8354 100%);
+      box-shadow: 0 4px 14px rgba(28, 131, 84, 0.28);
     }
 
     .showcase-content {
@@ -1003,6 +1004,71 @@
       color: var(--muted);
       font-size: 13px;
       text-align: center;
+    }
+
+    .footer-inner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+    }
+
+    .footer-credit {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 20px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #ffffff;
+      color: var(--muted);
+      font-size: 14px;
+      text-decoration: none;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+
+    .footer-credit:hover {
+      transform: translateY(-2px);
+      border-color: rgba(233, 75, 0, 0.45);
+      box-shadow: 0 10px 26px rgba(25, 52, 38, 0.10);
+    }
+
+    .footer-credit .fc-icon {
+      width: 18px;
+      height: 18px;
+      color: #ff6a00;
+      flex: none;
+    }
+
+    .footer-credit .fc-lead {
+      font-weight: 500;
+      letter-spacing: 0.01em;
+    }
+
+    .footer-credit .fc-brand {
+      font-weight: 800;
+      letter-spacing: 0.01em;
+    }
+
+    .footer-credit .fc-arrow {
+      font-size: 15px;
+      line-height: 1;
+      color: #e94b00;
+      transition: transform 0.2s ease;
+    }
+
+    .footer-credit:hover .fc-arrow {
+      transform: translate(2px, -2px);
+    }
+
+    .footer-note {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    @media (max-width: 760px) {
+      .footer-credit { padding: 11px 16px; gap: 8px; font-size: 13px; }
     }
 
     @media (max-width: 760px) {
@@ -1291,7 +1357,7 @@ For training this model, we develop a 3D asset data construction agent based on 
       </div>
     </section>
 
-    <section class="section" id="interactive-3d-2">
+    <section class="section" id="interactive-3d-2" data-channel="shaded">
       <div class="model-gallery-heading">
         <h2>SOTA performance</h2>
         <p>Pay close attention to the texture-to-image alignment across different viewpoints.</p>
@@ -1308,7 +1374,7 @@ For training this model, we develop a 3D asset data construction agent based on 
             </div>
           </figure>
 
-          <div class="compare-cell">
+          <div class="compare-cell compare-cell-3d compare-cell-baseline-3d">
             <span class="compare-cell-label compare-baseline-label">Tripo v3.1</span>
             <model-viewer class="compare-trellis-viewer"
               alt="Baseline result"
@@ -1323,6 +1389,10 @@ For training this model, we develop a 3D asset data construction agent based on 
               loading="lazy"
               interaction-prompt="none">
             </model-viewer>
+            <div class="channel-stage">
+              <canvas class="channel-canvas"></canvas>
+              <div class="channel-status is-visible">Loading…</div>
+            </div>
             <div class="drag-hint" aria-hidden="true">
               <svg viewBox="0 0 24 24" fill="url(#dragHandGrad)" stroke="#ffffff" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"><path d="M18 11V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2"/><path d="M14 10V4a2 2 0 0 0-2-2a2 2 0 0 0-2 2v2"/><path d="M10 10.5V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg>
               <span class="drag-hint-caption">Drag to rotate</span>
@@ -1332,8 +1402,30 @@ For training this model, we develop a 3D asset data construction agent based on 
             </div>
           </div>
 
-          <div class="compare-cell">
+          <div class="compare-cell compare-cell-3d compare-cell-ours-3d">
             <span class="compare-cell-label compare-ours-label">TaoTex</span>
+            <style>
+              /* Shaded keeps the original model-viewer (pixel-identical to S1). */
+              /* The three.js stage is only shown for albedo / roughness / metallic. */
+              .compare-cell-3d .channel-stage { position: relative; width: 100%; height: 560px; background: transparent; display: none; }
+              #interactive-3d-2:not([data-channel="shaded"]) .compare-cell-3d .compare-ours-viewer,
+              #interactive-3d-2:not([data-channel="shaded"]) .compare-cell-3d .compare-trellis-viewer { display: none !important; }
+              #interactive-3d-2:not([data-channel="shaded"]) .compare-cell-3d .cell-loading { display: none !important; }
+              #interactive-3d-2:not([data-channel="shaded"]) .compare-cell-3d .channel-stage { display: block; }
+              .compare-cell-3d .channel-canvas { display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; }
+              .compare-cell-3d .channel-canvas:active { cursor: grabbing; }
+              .compare-cell-3d .channel-status { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 20px; text-align: center; color: var(--muted); font-size: 14px; font-weight: 600; background: rgba(238, 242, 239, 0.72); pointer-events: none; opacity: 0; transition: opacity 0.25s ease; }
+              .compare-cell-3d .channel-status.is-visible { opacity: 1; }
+              #interactive-3d-2 .channel-buttons { position: absolute; left: 50%; bottom: 54px; transform: translateX(-50%); z-index: 4; display: flex; flex-wrap: nowrap; justify-content: center; align-items: center; gap: 8px; pointer-events: auto; }
+              #interactive-3d-2 .channel-button { padding: 7px 16px; border: 1.5px solid var(--line); border-radius: 999px; background: rgba(255, 255, 255, 0.92); color: #2a4a63; font-size: 13px; font-weight: 700; line-height: 1; cursor: pointer; box-shadow: 0 2px 8px rgba(25, 52, 38, 0.10); transition: border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease, background 0.2s ease; }
+              #interactive-3d-2 .channel-button:hover { border-color: #1c5bc9; color: #1c5bc9; transform: translateY(-1px); }
+              #interactive-3d-2 .channel-button.is-active { border-color: transparent; color: #ffffff; background: linear-gradient(90deg, #5aa9ff 0%, #2f7de0 52%, #1c5bc9 100%); box-shadow: 0 4px 14px rgba(28, 91, 201, 0.34); }
+              @media (max-width: 760px) {
+                .compare-cell-3d .channel-stage { height: 420px; }
+                #interactive-3d-2 .channel-buttons { position: static; transform: none; width: 100%; flex-wrap: wrap; justify-content: center; gap: 6px; padding: 12px 0 2px; }
+                #interactive-3d-2 .channel-button { padding: 5px 10px; font-size: 12px; }
+              }
+            </style>
             <model-viewer class="compare-ours-viewer"
               alt="TaoTex result"
               camera-controls
@@ -1347,6 +1439,10 @@ For training this model, we develop a 3D asset data construction agent based on 
               loading="lazy"
               interaction-prompt="none">
             </model-viewer>
+            <div class="channel-stage">
+              <canvas class="channel-canvas"></canvas>
+              <div class="channel-status is-visible">Loading…</div>
+            </div>
             <div class="drag-hint" aria-hidden="true">
               <svg viewBox="0 0 24 24" fill="url(#dragHandGrad)" stroke="#ffffff" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"><path d="M18 11V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2"/><path d="M14 10V4a2 2 0 0 0-2-2a2 2 0 0 0-2 2v2"/><path d="M10 10.5V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg>
               <span class="drag-hint-caption">Drag to rotate</span>
@@ -1354,6 +1450,12 @@ For training this model, we develop a 3D asset data construction agent based on 
             <div class="cell-loading" aria-hidden="true">
               <div class="cell-loading-bar"><span class="cell-loading-fill"></span></div>
             </div>
+          </div>
+          <div class="channel-buttons" role="group" aria-label="Material channel">
+            <button class="channel-button is-active" type="button" data-channel="shaded">Shaded</button>
+            <button class="channel-button" type="button" data-channel="albedo">Albedo</button>
+            <button class="channel-button" type="button" data-channel="roughness">Roughness</button>
+            <button class="channel-button" type="button" data-channel="metallic">Metallic</button>
           </div>
           <div class="method-switcher" role="group" aria-label="Select baseline method"></div>
           <p class="viewer-hint">Drag to rotate · Right-drag to pan</p>
@@ -1394,7 +1496,16 @@ For training this model, we develop a 3D asset data construction agent based on 
   </main>
 
   <footer>
-    <div class="shell">TaoTex project page · Last updated September 2026</div>
+    <div class="shell footer-inner">
+      <a class="footer-credit" href="https://alibaba.github.io/Taobao3D/" target="_blank" rel="noopener noreferrer" aria-label="By the Taobao3D Team">
+        <svg class="fc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2 21 7 12 12 3 7z"/><path d="M3 7v10l9 5 9-5V7"/><path d="M12 12v10"/></svg>
+        <span class="fc-lead">By the</span>
+        <span class="fc-brand title-gradient">Taobao3D</span>
+        <span class="fc-lead">Team</span>
+        <span class="fc-arrow" aria-hidden="true">&#8599;</span>
+      </a>
+      <p class="footer-note">TaoTex project page · Last updated September 2026</p>
+    </div>
   </footer>
 
   <script>
@@ -1946,6 +2057,326 @@ For training this model, we develop a 3D asset data construction agent based on 
           if (r) { e.preventDefault(); open(r.src, r.alt); }
         }
       });
+    })();
+  </script>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+  <script type="module">
+    (async () => {
+      const section = document.getElementById('interactive-3d-2');
+      if (!section) return;
+      const oursCell = section.querySelector('.compare-cell-ours-3d');
+      const baselineCell = section.querySelector('.compare-cell-baseline-3d');
+      if (!oursCell || !baselineCell) return;
+      const buttons = Array.from(section.querySelectorAll('.channel-buttons .channel-button'));
+
+      const setCellStatus = (cell, msg) => {
+        const s = cell && cell.querySelector('.channel-status');
+        if (!s) return;
+        if (!msg) { s.classList.remove('is-visible'); }
+        else { s.textContent = msg; s.classList.add('is-visible'); }
+      };
+
+      let THREE, OrbitControls, GLTFLoader, RoomEnvironment;
+      try {
+        THREE = await import('three');
+        ({ OrbitControls } = await import('three/addons/controls/OrbitControls.js'));
+        ({ GLTFLoader } = await import('three/addons/loaders/GLTFLoader.js'));
+        try { ({ RoomEnvironment } = await import('three/addons/environments/RoomEnvironment.js')); } catch (e) { RoomEnvironment = null; }
+      } catch (err) {
+        setCellStatus(oursCell, 'Could not load the 3D viewer library (check network).');
+        setCellStatus(baselineCell, '');
+        return;
+      }
+
+      const VERT = 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }';
+      const FRAG = [
+        'uniform sampler2D uMap; uniform int uCh; varying vec2 vUv;',
+        'void main(){',
+        '  vec4 t = texture2D(uMap, vUv);',
+        '  float v = (uCh == 0) ? t.g : t.b;',
+        '  gl_FragColor = vec4(vec3(v), 1.0);',
+        '}'
+      ].join('\n');
+      const loader = new GLTFLoader();
+
+      // Shared comparison state (mirrors the hero's original sync/auto-rotate feel).
+      const pair = {
+        channel: 'shaded',
+        dragging: null,       // the viewer instance currently being dragged, or null
+        autoRotate: true,
+        lastInteraction: 0,
+        lastAutoTs: null,
+        zoomScale: 1,
+        theta: null,          // canonical shared azimuth (radians) — null until first fit
+        phi: null,            // canonical shared polar angle (radians)
+      };
+      const MIN_ZOOM = 0.5, MAX_ZOOM = 300 / 105;
+      const AUTO_SPEED = 8 * Math.PI / 180 / 1000; // rad per ms
+      const RESUME_DELAY = 3000;
+      const clampPhi = (p) => Math.min(Math.PI - 0.05, Math.max(0.05, p));
+      const normDelta = (d) => { while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI; return d; };
+
+      function readSpherical(v) {
+        const off = v.camera.position.clone().sub(v.controls.target);
+        return new THREE.Spherical().setFromVector3(off);
+      }
+      function applySpherical(v, s) {
+        const off = new THREE.Vector3().setFromSpherical(s);
+        v.camera.position.copy(v.controls.target).add(off);
+        v.camera.lookAt(v.controls.target);
+      }
+      // Drive a viewer to the single canonical shared orientation. Every reload re-applies
+      // this, so switching the baseline method (which reloads only one column) can't knock
+      // the two columns out of alignment.
+      function applyOrientation(v) {
+        if (!v || v.fitRadius == null || pair.theta == null || pair.phi == null) return;
+        const s = new THREE.Spherical(v.fitRadius * pair.zoomScale, pair.phi, pair.theta);
+        const off = new THREE.Vector3().setFromSpherical(s);
+        v.camera.position.copy(v.controls.target).add(off);
+        v.camera.lookAt(v.controls.target);
+      }
+
+      // The three.js pair is built lazily on first non-shaded click so that the default
+      // shaded view stays the untouched model-viewer (and we never double-fetch the GLB on load).
+      let viewerOurs = null, viewerBaseline = null, viewers = null, loopStarted = false;
+      function ensureViewers() {
+        if (viewers) return;
+        viewerOurs = makeViewer(oursCell);
+        viewerBaseline = makeViewer(baselineCell);
+        viewers = [viewerOurs, viewerBaseline];
+        viewers.forEach((v) => v.resize());
+        if (!loopStarted) { loopStarted = true; requestAnimationFrame(mainLoop); }
+      }
+
+      function makeViewer(cell) {
+        const canvas = cell.querySelector('.channel-canvas');
+        const hiddenMV = cell.querySelector('.compare-ours-viewer, .compare-trellis-viewer');
+        const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+        renderer.outputColorSpace = THREE.SRGBColorSpace;
+        const scene = new THREE.Scene();
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        // Mirror model-viewer's 'neutral' preset, which sets toneMappingExposure = exposure(1) * 1.3.
+        renderer.toneMappingExposure = 1.3;
+
+        let envApplied = false;
+        if (RoomEnvironment) {
+          try {
+            const pmrem = new THREE.PMREMGenerator(renderer);
+            const envRT = pmrem.fromScene(new RoomEnvironment(), 0.04);
+            scene.environment = envRT.texture;
+            pmrem.dispose();
+            envApplied = true;
+          } catch (e) { envApplied = false; }
+        }
+
+        // Faithful replica of model-viewer 'neutral': pure image-based lighting, no fill lights.
+        // Only fall back to manual lights if the environment map could not be generated.
+        if (!envApplied) {
+          const hemi = new THREE.HemisphereLight(0xffffff, 0x8a8f98, 1.35);
+          scene.add(hemi);
+          const key = new THREE.DirectionalLight(0xffffff, 1.6); key.position.set(1, 1.2, 1); scene.add(key);
+          const rim = new THREE.DirectionalLight(0xffffff, 0.7); rim.position.set(-1, 0.4, -1); scene.add(rim);
+        }
+        const camera = new THREE.PerspectiveCamera(35, 1, 0.01, 4000);
+        const controls = new OrbitControls(camera, canvas);
+        // Damping off: the shared loop mirrors rotation only during active drag, so the
+        // post-release inertial "coast" damping adds would drift the two columns out of sync.
+        controls.enableDamping = false;
+        controls.enableZoom = false;   // wheel handled manually (shared)
+        controls.enablePan = false;    // keep the pair aligned; pan is not synced
+        controls.autoRotate = false;   // rotation handled by the shared loop
+
+        const v = {
+          cell, canvas, renderer, scene, camera, controls, hiddenMV,
+          root: null, meshes: [], fitRadius: null, prev: null, loadId: 0,
+        };
+
+        v.buildMats = (mesh) => {
+          const ud = mesh.userData;
+          if (!ud.orig) ud.orig = mesh.material;
+          const o = ud.orig;
+          if (!ud.albedo) ud.albedo = new THREE.MeshBasicMaterial({ map: (o && o.map) || null, side: o ? o.side : THREE.FrontSide });
+          if (ud.chan === undefined) {
+            const mr = o && (o.metalnessMap || o.roughnessMap);
+            ud.chan = mr ? new THREE.ShaderMaterial({
+              uniforms: { uMap: { value: mr }, uCh: { value: 0 } },
+              vertexShader: VERT, fragmentShader: FRAG, side: o ? o.side : THREE.FrontSide,
+            }) : null;
+          }
+        };
+
+        v.applyChannel = (mode) => {
+          const anyChan = v.meshes.some((m) => m.userData.chan);
+          v.meshes.forEach((m) => {
+            v.buildMats(m);
+            if (mode === 'shaded') m.material = m.userData.orig;
+            else if (mode === 'albedo') m.material = m.userData.albedo;
+            else if (m.userData.chan) { m.userData.chan.uniforms.uCh.value = (mode === 'roughness') ? 0 : 1; m.material = m.userData.chan; }
+            else m.material = m.userData.orig;
+          });
+          if ((mode === 'roughness' || mode === 'metallic') && !anyChan) {
+            setCellStatus(v.cell, 'No roughness / metallic map.');
+          } else {
+            setCellStatus(v.cell, '');
+          }
+        };
+
+        v.clear = () => {
+          if (v.root) {
+            scene.remove(v.root);
+            v.root.traverse((o) => { if (o.isMesh && o.geometry) o.geometry.dispose(); });
+            v.root = null;
+          }
+          v.meshes.length = 0; v.fitRadius = null; v.prev = null;
+        };
+
+        v.fit = () => {
+          const box = new THREE.Box3().setFromObject(v.root);
+          const size = box.getSize(new THREE.Vector3());
+          const center = box.getCenter(new THREE.Vector3());
+          const maxDim = Math.max(size.x, size.y, size.z) || 1;
+          const dist = (maxDim / 2) / Math.tan((camera.fov * Math.PI / 180) / 2) * 1.5;
+          v.fitRadius = dist;
+          camera.near = Math.max(dist / 1000, 0.01);
+          camera.far = dist * 100;
+          camera.updateProjectionMatrix();
+          controls.target.copy(center);
+          controls.minDistance = dist * 0.05;
+          controls.maxDistance = dist * 20;
+          // Seed the shared angle once from a neutral front view; afterwards every
+          // reload re-orients to whatever the pair is currently showing.
+          if (pair.theta == null || pair.phi == null) {
+            const sp = new THREE.Spherical().setFromVector3(new THREE.Vector3(0.6, 0.35, 1).normalize());
+            pair.theta = sp.theta; pair.phi = sp.phi;
+          }
+          applyOrientation(v);
+          controls.update();
+          v.prev = readSpherical(v);
+        };
+
+        v.resize = () => {
+          const w = canvas.clientWidth, h = canvas.clientHeight;
+          if (!w || !h) return;
+          renderer.setSize(w, h, false);
+          camera.aspect = w / h;
+          camera.updateProjectionMatrix();
+        };
+
+        v.load = (url) => {
+          if (!url) return;
+          const id = ++v.loadId;   // invalidate any in-flight load from a previous switch
+          v.clear();
+          setCellStatus(v.cell, 'Loading…');
+          loader.load(url, (gltf) => {
+            if (id !== v.loadId) {  // a newer load already started -> discard this stale result
+              gltf.scene.traverse((o) => { if (o.isMesh && o.geometry) o.geometry.dispose(); });
+              return;
+            }
+            v.root = gltf.scene;
+            v.root.traverse((o) => { if (o.isMesh) { v.meshes.push(o); v.buildMats(o); } });
+            scene.add(v.root);
+            v.fit();
+            v.applyChannel(pair.channel);
+          }, (xhr) => {
+            if (id === v.loadId && xhr && xhr.total) setCellStatus(v.cell, 'Loading… ' + Math.round((xhr.loaded / xhr.total) * 100) + '%');
+          }, () => {
+            if (id === v.loadId) setCellStatus(v.cell, 'Failed to load model.');
+          });
+        };
+
+        canvas.addEventListener('pointerdown', () => {
+          pair.dragging = v; pair.autoRotate = false; pair.lastAutoTs = null;
+        });
+        canvas.addEventListener('wheel', (e) => {
+          e.preventDefault();
+          const dm = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? window.innerHeight : 1;
+          pair.zoomScale = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, pair.zoomScale * Math.exp(e.deltaY * dm * 0.0015)));
+          viewers.forEach((x) => applyOrientation(x));
+          pair.autoRotate = false; pair.lastInteraction = performance.now();
+        }, { passive: false });
+
+        if (window.ResizeObserver) new ResizeObserver(() => v.resize()).observe(canvas);
+
+        if (v.hiddenMV) {
+          const grab = () => { const s = v.hiddenMV.getAttribute('src'); if (s) { pair.zoomScale = 1; v.load(s); } };
+          new MutationObserver(grab).observe(v.hiddenMV, { attributes: true, attributeFilter: ['src'] });
+          if (v.hiddenMV.getAttribute('src')) grab();
+          else { const iv = setInterval(() => { if (v.hiddenMV.getAttribute('src')) { clearInterval(iv); grab(); } }, 300); }
+        }
+        return v;
+      }
+
+      window.addEventListener('pointerup', () => { if (pair.dragging) { pair.dragging = null; pair.lastInteraction = performance.now(); } });
+      window.addEventListener('pointercancel', () => { if (pair.dragging) { pair.dragging = null; pair.lastInteraction = performance.now(); } });
+
+      buttons.forEach((b) => b.addEventListener('click', () => {
+        const ch = b.dataset.channel;
+        pair.channel = ch;
+        section.dataset.channel = ch;   // CSS: shaded -> model-viewer; otherwise -> three.js stage
+        buttons.forEach((x) => x.classList.toggle('is-active', x === b));
+        if (ch === 'shaded') return;    // untouched model-viewer handles shaded; three.js stays dormant
+        ensureViewers();                // build the three.js pair on first channel use
+        viewers.forEach((v) => { if (v.root) v.applyChannel(ch); });
+      }));
+
+      function mainLoop(ts) {
+        // In shaded the model-viewer owns the viewport; idle the three.js loop so it
+        // doesn't render two hidden WebGL contexts every frame and contend with
+        // model-viewer (which caused brief object overlap on rapid switches).
+        if (pair.channel === 'shaded') { requestAnimationFrame(mainLoop); return; }
+
+        viewerOurs.controls.update();
+        viewerBaseline.controls.update();
+
+        if (pair.dragging) {
+          const drag = pair.dragging;
+          // The dragged viewer already advanced via controls.update(); fold its
+          // per-frame delta into the shared canonical angle, then drive BOTH columns
+          // from that single angle so they can never diverge.
+          if (drag.prev && pair.theta != null) {
+            const cur = readSpherical(drag);
+            pair.theta += normDelta(cur.theta - drag.prev.theta);
+            pair.phi = clampPhi(pair.phi + (cur.phi - drag.prev.phi));
+          }
+          applyOrientation(viewerOurs);
+          applyOrientation(viewerBaseline);
+        } else {
+          if (!pair.autoRotate && pair.lastInteraction > 0 && ts - pair.lastInteraction > RESUME_DELAY) {
+            pair.autoRotate = true; pair.lastAutoTs = null;
+          }
+          if (pair.autoRotate) {
+            if (pair.lastAutoTs !== null) {
+              const dt = ts - pair.lastAutoTs;
+              if (dt > 0 && dt < 100 && pair.theta != null) {
+                pair.theta += AUTO_SPEED * dt;
+                applyOrientation(viewerOurs);
+                applyOrientation(viewerBaseline);
+              }
+            }
+            pair.lastAutoTs = ts;
+          } else {
+            pair.lastAutoTs = null;
+          }
+        }
+
+        // Remember each viewer's final orbit for next frame's delta.
+        viewers.forEach((v) => { if (v.fitRadius) v.prev = readSpherical(v); });
+
+        viewerOurs.renderer.render(viewerOurs.scene, viewerOurs.camera);
+        viewerBaseline.renderer.render(viewerBaseline.scene, viewerBaseline.camera);
+        requestAnimationFrame(mainLoop);
+      }
+      // No eager three.js setup: shaded (model-viewer) is shown by default and the three.js pair
+      // (resize + render loop) starts inside ensureViewers() on the first non-shaded click.
     })();
   </script>
 </body>
